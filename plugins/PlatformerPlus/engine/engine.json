@@ -1,0 +1,315 @@
+{
+  "version": "3.1.0-e15",
+
+  "fields": [    
+    {
+      "key": "plat_drop_through",
+      "label": "Drop Through Platforms",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Off"],
+        [1, "Down Button"],
+        [2, "Down and Jump"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 1
+    },
+    {
+      "key": "plat_mp_group",
+      "label": "Platfrom Actor Collision Group",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "None"],
+        [2, "Collision Group 1"],
+        [4, "Collision Group 2"],
+        [8, "Collision Group 3"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_solid_group",
+      "label": "Solid Actor Collision Group",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "None"],
+        [2, "Collision Group 1"],
+        [4, "Collision Group 2"],
+        [8, "Collision Group 3"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_jump_min",
+      "label": "Minimum Jump Height",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 8192,
+      "min": 0,
+      "max": 16384
+    },  
+    {
+      "key": "plat_hold_jump_max",
+      "label": "Jump Frames",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 6,
+      "min": 1,
+      "max": 100
+    },   
+    {
+      "key": "plat_extra_jumps",
+      "label": "Extra Jumps (set to 255 for infinite)",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 0,
+      "min": 0,
+      "max": 255
+    }, 
+    {
+      "key": "plat_jump_reduction",
+      "label": "Height Reduction on Subsequent Jumps",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 0,
+      "min": 0,
+      "max": 8192
+    },
+    {
+      "key": "plat_coyote_max",
+      "label": "Coyote Time",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 6,
+      "min": 0,
+      "max": 10
+    },
+    {
+      "key": "plat_buffer_max",
+      "label": "Jump Buffer",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 6,
+      "min": 0,
+      "max": 20
+    },  
+    {
+      "key": "plat_wall_jump_max",
+      "label": "Wall Jumps",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 0,
+      "min": 0,
+      "max": 255
+    },
+    {
+      "key": "plat_wall_slide",
+      "label": "Enable Wall Slide",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Off"],
+        [1, "On"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },        
+    {
+      "key": "plat_wall_grav",
+      "label": "Wall Slide Gravity",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 1792,
+      "min": 0,
+      "max": 8192
+    },     
+    {
+      "key": "plat_wall_kick",
+      "label": "Wall Kick Off",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 1792,
+      "min": 0,
+      "max": 8192
+    }, 
+    {
+      "key": "plat_float_input",
+      "label": "Float Input",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "None"],
+        [1, "Hold Jump"],
+        [2, "Hold Up"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_float_grav",
+      "label": "Float Fall Speed",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 3000,
+      "min": 0,
+      "max": 8192
+    },   
+    {
+      "key": "plat_air_control",
+      "label": "Air Control",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Disable"],
+        [1, "Enable"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 1
+    },
+    {
+      "key": "plat_air_dec",
+      "label": "Air Deceleration",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 208,
+      "min": 0,
+      "max": 768
+    },
+    {
+      "key": "plat_run_type",
+      "label": "Run Style",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "No Running"],
+        [1, "Default Smooth Acceleration"],
+        [2, "Enhanced Smooth Acceleration"],
+        [3, "Immediate Run Speed"],
+        [4, "Two Run Speed Levels"],
+        [5, "Three Run Speed Levels"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 1
+    },
+    {
+      "key": "plat_turn_acc",
+      "label": "Acceleration when Turning",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 150,
+      "min": 0,
+      "max": 768
+    }, 
+    {
+      "key": "plat_run_boost",
+      "label": "Jump Boost from Run Speed",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 0,
+      "min": 0,
+      "max": 255
+    }, 
+    {
+      "key": "plat_dash",
+      "label": "Dash Input",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Off"],
+        [1, "Interact"],
+        [2, "Double Tap"],
+        [3, "Down and Jump"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_dash_style",
+      "label": "Dash Style",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Ground"],
+        [1, "Air"],
+        [2, "Both"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_dash_momentum",
+      "label": "Dash Momentum",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "None"],
+        [1, "Horizontal Momentum Only"],
+        [2, "Veritcal Momentum Only (no dash through walls)"],
+        [3, "Both"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_dash_through",
+      "label": "Dash Through...",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Nothing"],
+        [1, "Actors"],
+        [2, "Actors & Triggers"],
+        [3, "Triggers, Actors & Walls"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_dash_dist",
+      "label": "Dash Distance",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "WORD",
+      "defaultValue": 800,
+      "min": 0,
+      "max": 1600
+    },  
+    {
+      "key": "plat_dash_frames",
+      "label": "Dash Time (frames)",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 5,
+      "min": 1,
+      "max": 30
+    },  
+    {
+      "key": "plat_dash_ready_max",
+      "label": "Dash Recharge Time",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 10,
+      "min": 0,
+      "max": 128
+    }
+  ]
+}
