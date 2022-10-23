@@ -526,6 +526,8 @@ void platform_update() BANKED {
                 }
                 // Clamp Y Velocity
                 pl_vel_y = CLAMP(pl_vel_y,-plat_max_fall_vel, plat_max_fall_vel);
+            } else{
+                temp_y = PLAYER.pos.y;  
             }
             //ANIMATION-------------------------------------------------------------------------------------------------------
             //Currently this animation uses the 'jump' animation is it's default. 
@@ -830,7 +832,7 @@ void platform_update() BANKED {
                     if(wj_val != 0){
                         wj_val -= 1;
                         nocontrol_h = 5;
-                        pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
+                        pl_vel_x += (plat_wall_kick + plat_walk_vel)*last_wall;
                         jump_type = 3;
                         jump_init();
 
@@ -910,7 +912,7 @@ void platform_update() BANKED {
                             jump_type = 3;
                             wj_val -= 1;
                             nocontrol_h = 5;
-                            pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
+                            pl_vel_x += (plat_wall_kick + plat_walk_vel)*last_wall;
                             jump_init();
                         }
                     }
@@ -960,7 +962,7 @@ void platform_update() BANKED {
             //Solid Actors
             if (hit_actor->collision_group == plat_solid_group){
                 if(!actor_attached || hit_actor != last_actor){
-                    if (temp_y < hit_actor->pos.y + (hit_actor->bounds.top << 4) && pl_vel_y >= 0){
+                    if (temp_y < (hit_actor->pos.y + (hit_actor->bounds.top << 4)) && pl_vel_y >= 0){
                         //Attach to MP
                         last_actor = hit_actor;
                         mp_last_x = hit_actor->pos.x;
@@ -974,21 +976,22 @@ void platform_update() BANKED {
                         //PLAYER bounds top seems to be 0 and counting down...
                     } else if (temp_y + (PLAYER.bounds.top<<4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
                         actorColY += (hit_actor->pos.y - PLAYER.pos.y) + ((-PLAYER.bounds.top + hit_actor->bounds.bottom)<<4) + 32;
-                        pl_vel_y = 0;
-                        if (plat_state == JUMP_STATE){
-                            plat_state = FALL_STATE;
+                        pl_vel_y = plat_grav;
+                        if(plat_state == JUMP_STATE){
+                            plat_state = FALL_INIT;
                         }
+
                     } else if (PLAYER.pos.x < hit_actor->pos.x){
-                        actorColX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + hit_actor->bounds.left)<<4);
+                        actorColX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
                         pl_vel_x = 0;
                         if(plat_state == DASH_STATE){
-                            plat_state = FALL_STATE;
+                            plat_state = FALL_INIT;
                         }
                     } else if (PLAYER.pos.x > hit_actor->pos.x){
                         actorColX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
                         pl_vel_x = 0;
                         if(plat_state == DASH_STATE){
-                            plat_state = FALL_STATE;
+                            plat_state = FALL_INIT;
                         }
                     }
                 }
