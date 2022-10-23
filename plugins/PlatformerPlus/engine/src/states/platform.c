@@ -193,6 +193,7 @@ void platform_init() BANKED {
         }
     }
 
+
     //Normalize variables by number of frames
     jump_per_frame = plat_jump_vel / MIN(15, plat_hold_jump_max);   //jump force applied per frame in the JUMP_STATE
     jump_reduction = plat_jump_reduction / plat_hold_jump_max;      //Amount to reduce subequent jumps per frame in JUMP_STATE
@@ -387,7 +388,7 @@ void platform_update() BANKED {
                                 //The landing space is the tile we collided on, but one to the left
                                 new_x = ((((tile_current) << 3) - PLAYER.bounds.right) << 4) -1;
                                 col = 1;
-                                last_wall = -1;
+                                last_wall = 1;
                                 wc_val = plat_coyote_max;
                                 dash_currentframe == 0;
                                 goto endRcol;
@@ -430,7 +431,7 @@ void platform_update() BANKED {
                             if (tile_at(tile_current, tile_start) & COLLISION_RIGHT) {
                                 new_x = ((((tile_current + 1) << 3) - PLAYER.bounds.left) << 4)+1;
                                 col = -1;
-                                last_wall = 1;
+                                last_wall = -1;
                                 dash_currentframe == 0;
                                 wc_val = plat_coyote_max;
                                 goto endLcol;
@@ -801,11 +802,13 @@ void platform_update() BANKED {
 
             //ANIMATION---------------------------------------------------------------------------------------------------
             //Face away from walls
+            
             if (col == 1){
-                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
+                  actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
             } else if (col == -1){
-                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
-            } 
+                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
+            }
+
 
             //STATE CHANGE------------------------------------------------------------------------------------------------
             //Above, basic_y_col can cause WALL -> GROUNDED.
@@ -1087,7 +1090,7 @@ void acceleration(BYTE dir) BANKED {
             //Ordinay Walk (same as below)
                 if(tempSpd < 0 && plat_turn_acc != 0){
                     tempSpd += plat_turn_acc;
-                    tempSpd = MIN(tempSpd, plat_min_vel);
+                    tempSpd = MIN(tempSpd, plat_walk_vel);
                     run_stage = -1;
                 } else{
                     run_stage = 0;
@@ -1105,7 +1108,7 @@ void acceleration(BYTE dir) BANKED {
             //Type 2: Enhanced Smooth Acceleration
                 if(tempSpd < 0){
                     tempSpd += plat_turn_acc;
-                    tempSpd = MIN(tempSpd, plat_min_vel);
+                    tempSpd = MIN(tempSpd, plat_walk_vel);
                     run_stage = -1;
                 }
                 else if (tempSpd < plat_walk_vel){
@@ -1128,7 +1131,7 @@ void acceleration(BYTE dir) BANKED {
                 //If we're below the walk speed, use walk acceleration
                 if (tempSpd < 0){
                     tempSpd += plat_turn_acc;
-                    tempSpd = MIN(tempSpd, plat_min_vel);
+                    tempSpd = MIN(tempSpd, plat_walk_vel);
                     run_stage = -1;
                 } else if(tempSpd < plat_walk_vel){
                     tempSpd += plat_walk_acc;
@@ -1152,7 +1155,7 @@ void acceleration(BYTE dir) BANKED {
             //Type 4: Tiered acceleration with 3 speeds
                 if (tempSpd < 0){
                     tempSpd += plat_turn_acc;
-                    tempSpd = MIN(tempSpd, plat_min_vel);
+                    tempSpd = MIN(tempSpd, plat_walk_vel);
                     run_stage = -1;
                 }else if(tempSpd < plat_walk_vel){
                     tempSpd += plat_walk_acc;
@@ -1183,7 +1186,7 @@ void acceleration(BYTE dir) BANKED {
         //And need to re-write the animation bit so that the buttons overpowers the velocity
         if(tempSpd < 0 && plat_turn_acc != 0){
             tempSpd += plat_turn_acc;
-            tempSpd = MIN(tempSpd, plat_min_vel);
+            tempSpd = MIN(tempSpd, plat_walk_vel);
             run_stage = -1;
         }
         else{
@@ -1368,10 +1371,13 @@ void wall_check() BANKED {
     //Wall-State Check
     //We need to check for ground state here because this check follows on collisions that could already have changed the state to be grounded
     if(plat_state != GROUND_STATE && pl_vel_y >= 0 && plat_wall_slide){
-        if ((col == 1 && INPUT_LEFT) || (col == -1 && INPUT_RIGHT)){
-            if (plat_state != WALL_STATE){plat_state = WALL_INIT;}
+        if ((col == -1 && INPUT_LEFT) || (col == 1 && INPUT_RIGHT)){
+            if (plat_state != WALL_STATE){
+                plat_state = WALL_INIT;
+            }
+        } else if (plat_state == WALL_STATE){
+            plat_state = FALL_INIT;
         }
-        else if (plat_state == WALL_STATE){plat_state = FALL_INIT;}
     }
 }
 
@@ -1388,7 +1394,7 @@ void basic_x_col() BANKED {
             if (tile_at(tile_x, tile_start) & COLLISION_LEFT) {
                 new_x = (((tile_x << 3) - PLAYER.bounds.right) << 4) - 1;
                 pl_vel_x = 0;
-                col = -1;
+                col = 1;
                 last_wall = 1;
                 wc_val = plat_coyote_max;
                 break;
@@ -1403,7 +1409,7 @@ void basic_x_col() BANKED {
             if (tile_at(tile_x, tile_start) & COLLISION_RIGHT) {
                 new_x = ((((tile_x + 1) << 3) - PLAYER.bounds.left) << 4) + 1;
                 pl_vel_x = 0;
-                col = 1;
+                col = -1;
                 last_wall = -1;
                 wc_val = plat_coyote_max;
                 break;
