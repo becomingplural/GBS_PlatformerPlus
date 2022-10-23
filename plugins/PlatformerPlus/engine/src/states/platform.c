@@ -235,6 +235,7 @@ void platform_init() BANKED {
 
 void platform_update() BANKED {
     //INITIALIZE VARS
+    actor_t *hit_actor;
     UBYTE tile_start, tile_end;     //I'm not sure why I can't localize these into the states that use them. Seems to be a leak. But maybe it's a switch issue.
     WORD temp_y = 0;
     deltaX = 0;                     //DeltaX/DeltaY measure change in distance per frame. Reset here.
@@ -588,7 +589,7 @@ void platform_update() BANKED {
                 pl_vel_y = 0;
             } else if (nocollide != 0){
                 //If we're dropping through a platform
-                pl_vel_y += 2500; //magic number, rough minimum for actually having the player descend through a platform
+                pl_vel_y = 7000; //magic number, rough minimum for actually having the player descend through a platform
             } else {
                 //Normal gravity
                 pl_vel_y += plat_grav;
@@ -618,7 +619,6 @@ void platform_update() BANKED {
             basic_y_col(drop_press);
 
             //ANIMATION---------------------------------------------------------------------------------------------------
-
             //Button direction overrides velocity, for slippery run reasons
             if (INPUT_LEFT){
                 actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
@@ -640,7 +640,7 @@ void platform_update() BANKED {
                 }
             }
             //GROUND -> JUMP Check
-            if (plat_state != DASH_STATE){    //If we started dashing, don't do other checks.
+            if (plat_state != DASH_STATE && nocollide == 0){    //If we started dashing, don't do other checks.
                 if (INPUT_PRESSED(INPUT_PLATFORM_JUMP)){
                     //Standard Jump
                     jump_type = 1;
@@ -780,7 +780,7 @@ void platform_update() BANKED {
             //Vertical Movement------------------------------------------------------------------------------------------
             //WALL SLIDE
             if (nocollide != 0){
-                pl_vel_y += 3000; //magic number, rough minimum for actually having the player descend through a platform
+                pl_vel_y += 7000; //magic number, rough minimum for actually having the player descend through a platform
             } else if (pl_vel_y < 0){
                 //If the player is still ascending, don't apply wall-gravity
                 pl_vel_y += plat_grav;
@@ -869,7 +869,10 @@ void platform_update() BANKED {
         
             //Vertical Movement--------------------------------------------------------------------------------------------
             if (nocollide != 0){
-                pl_vel_y += 2500; //magic number, rough minimum for actually having the player descend through a platform
+                pl_vel_y = 7000; //magic number, rough minimum for actually having the player descend through a platform
+            } else if (INPUT_PLATFORM_JUMP && pl_vel_y < 0) {
+                //Gravity while holding jump
+                pl_vel_y += plat_hold_grav;
             } else if (float_press && pl_vel_y > 0){
                 pl_vel_y = plat_float_grav;
             } else {
@@ -956,9 +959,9 @@ void platform_update() BANKED {
     //Don't hit actors while dashing
     actorColX = 0;  //These vars are used to track the offset from solid actors each frame. Reseting them here.
     actorColY = 0;
+
     if(plat_state != DASH_STATE || plat_dash_through == 0){
         //Actor Collisions
-        actor_t *hit_actor;
         hit_actor = actor_overlapping_player(FALSE);
         if (hit_actor != NULL && hit_actor->collision_group) {
             //Solid Actors
@@ -999,13 +1002,13 @@ void platform_update() BANKED {
                 }
             } else if (hit_actor->collision_group == plat_mp_group){
                 //Platform Actors
-                if(!actor_attached){
+                if(!actor_attached || hit_actor != last_actor){
                     if (temp_y < hit_actor->pos.y + (hit_actor->bounds.top << 4) && pl_vel_y >= 0){
                         //Attach to MP
                         last_actor = hit_actor;
                         mp_last_x = hit_actor->pos.x;
                         mp_last_y = hit_actor->pos.y;
-                        PLAYER.pos.y = hit_actor->pos.y + (hit_actor->bounds.top << 4) - (PLAYER.bounds.bottom << 4);
+                        PLAYER.pos.y = hit_actor->pos.y + (hit_actor->bounds.top << 4) - (PLAYER.bounds.bottom << 4) - 4;
                         //Other cleanup
                         pl_vel_y = 0;
                         actor_attached = TRUE;                        
@@ -1453,7 +1456,7 @@ void basic_y_col(UBYTE drop_press) BANKED {
                         }
                     }
                     if (drop_attempt == TRUE){
-                        nocollide = 10; //Magic Number, how many frames to steal vertical control
+                        nocollide = 5; //Magic Number, how many frames to steal vertical control
                         pl_vel_y += plat_grav; 
                     } else {
                         //Land on Floor
@@ -1470,7 +1473,7 @@ void basic_y_col(UBYTE drop_press) BANKED {
                 }
                 tile_start++;
             }
-            if(plat_state == GROUND_STATE){plat_state = FALL_INIT;}
+            if(plat_state == GROUND_STATE && !actor_attached){plat_state = FALL_INIT;}
         }
         PLAYER.pos.y = new_y;
     } else if (deltaY < 0) {
@@ -1493,7 +1496,7 @@ void basic_y_col(UBYTE drop_press) BANKED {
         PLAYER.pos.y = new_y;
     }
     else if (actor_attached){
-        plat_state = GROUND_INIT;
+        plat_state = GROUND_STATE;
     }
     // Clamp Y Velocity
     pl_vel_y = CLAMP(pl_vel_y,-plat_max_fall_vel, plat_max_fall_vel);
