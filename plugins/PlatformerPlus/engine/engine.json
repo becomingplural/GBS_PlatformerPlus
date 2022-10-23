@@ -181,6 +181,18 @@
       "defaultValue": 1
     },
     {
+      "key": "plat_turn_control",
+      "label": "Change Avatar Direction in the Air",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [0, "Disable"],
+        [1, "Enable"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 1
+    },
+    {
       "key": "plat_air_dec",
       "label": "Air Deceleration",
       "group": "Platformer Plus",

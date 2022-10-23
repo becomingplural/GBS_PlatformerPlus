@@ -7,6 +7,7 @@ Future notes on things to do:
     The result is that there could be a valid landing point across a wall, but the player is just a little too close for it to register. 
     I could create a 'look-back' loop that runs through the intervening tiles until it finds an empty landing spot.
 - Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
+- Right now disabling air control still allows the player to face a different direction in the air. Is that good or bad?
 
 TARGETS for Optimization
 - Is there any way to simplify the number of if branches with the solid actors?
@@ -102,6 +103,7 @@ WORD plat_wall_kick;        //Horizontal force for pushing off the wall
 UBYTE plat_float_input;     //Input type for float (hold up or hold jump)
 WORD plat_float_grav;       //Speed of fall descent while floating
 UBYTE plat_air_control;     //Enables/Disables air control
+UBYTE plat_turn_control;
 WORD plat_air_dec;          // air deceleration rate
 UBYTE plat_run_type;        //Chooses type of acceleration for jumping
 WORD plat_turn_acc;         //Speed with which a character turns
@@ -1232,15 +1234,17 @@ void deceleration() BANKED {
 void basic_anim() BANKED{
     //This animation is currently shared by jumping, dashing, and falling. Dashing doesn't need this complexity though.
     //Here velocity overrides direction. Whereas on the ground it is the reverse. 
-    if (INPUT_LEFT){
-        PLAYER.dir = DIR_LEFT;
-    } else if (INPUT_RIGHT){
-        PLAYER.dir = DIR_RIGHT;
-    } else if (pl_vel_x < 0) {
-        PLAYER.dir = DIR_LEFT;
-    } else if (pl_vel_x > 0) {
-        PLAYER.dir = DIR_RIGHT;
-    } 
+    if(plat_turn_control){
+        if (INPUT_LEFT){
+            PLAYER.dir = DIR_LEFT;
+        } else if (INPUT_RIGHT){
+            PLAYER.dir = DIR_RIGHT;
+        } else if (pl_vel_x < 0) {
+            PLAYER.dir = DIR_LEFT;
+        } else if (pl_vel_x > 0) {
+            PLAYER.dir = DIR_RIGHT;
+        }
+    }
 
     if (PLAYER.dir == DIR_LEFT){
         actor_set_anim(&PLAYER, ANIM_JUMP_LEFT);
