@@ -17,7 +17,7 @@
     },
     {
       "key": "plat_mp_group",
-      "label": "Platfrom Actor Collision Group",
+      "label": "Platform Actor Collision Group",
       "group": "Platformer Plus",
       "type": "select",
       "options": [
