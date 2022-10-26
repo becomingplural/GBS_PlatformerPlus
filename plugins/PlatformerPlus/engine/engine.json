@@ -224,7 +224,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 150,
+      "defaultValue": 0,
       "min": 0,
       "max": 768
     }, 

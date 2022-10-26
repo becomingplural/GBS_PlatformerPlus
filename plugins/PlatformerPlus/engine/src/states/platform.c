@@ -195,7 +195,6 @@ void platform_init() BANKED {
         }
     }
 
-
     //Normalize variables by number of frames
     jump_per_frame = plat_jump_vel / MIN(15, plat_hold_jump_max);   //jump force applied per frame in the JUMP_STATE
     jump_reduction = plat_jump_reduction / plat_hold_jump_max;      //Amount to reduce subequent jumps per frame in JUMP_STATE
@@ -834,7 +833,7 @@ void platform_update() BANKED {
                     if(wj_val != 0){
                         wj_val -= 1;
                         nocontrol_h = 5;
-                        pl_vel_x += (plat_wall_kick + plat_walk_vel)*last_wall;
+                        pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
                         jump_type = 3;
                         jump_init();
 
@@ -917,7 +916,7 @@ void platform_update() BANKED {
                             jump_type = 3;
                             wj_val -= 1;
                             nocontrol_h = 5;
-                            pl_vel_x += (plat_wall_kick + plat_walk_vel)*last_wall;
+                            pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
                             jump_init();
                         }
                     }
