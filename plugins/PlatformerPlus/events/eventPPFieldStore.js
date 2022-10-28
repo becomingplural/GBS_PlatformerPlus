@@ -27,7 +27,7 @@ const compile = (input, helpers) => {
   const { appendRaw, getVariableAlias, _addComment } = helpers;
 
   const fieldVarTypeLookup = {
-    mp_attached: "UINT8",
+    actor_attached: "UINT8",
     run_stage: "INT8",
     jump_type: "UINT8",
     dash_interrupt: "UINT8",
