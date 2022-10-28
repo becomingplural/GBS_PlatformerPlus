@@ -6,11 +6,18 @@ Future notes on things to do:
 - Currently, dashing through walls checks the potential end point, and if it isn't clear then it continues with the normal dash routine. 
     The result is that there could be a valid landing point across a wall, but the player is just a little too close for it to register. 
     I could create a 'look-back' loop that runs through the intervening tiles until it finds an empty landing spot.
-- Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
-- Right now disabling air control still allows the player to face a different direction in the air. Is that good or bad?
+- The bounce event is a funny one, because it can have the player going up without being in the jump state. I should perhaps add some error catching stuff for such situations
+- No control state and nothing state
+- Take new stuff out of actor.c/actor.h
+- Check for a bug with sticking to screen edges anytime the player collision box has a negative X value.
 
 TARGETS for Optimization
 - Is there any way to simplify the number of if branches with the solid actors?
+- It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
+
+THINGS TO WATCH
+- Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
+- I recently made it so that solid actors only reset the player's velocity if they aren't pressing a direction. Keep an eye on this.
 
 NOTES on GBStudio Quirks
 - 256 velocities per position, 16 'positions' per pixel, 8 pixels per tile
@@ -103,7 +110,7 @@ WORD plat_wall_kick;        //Horizontal force for pushing off the wall
 UBYTE plat_float_input;     //Input type for float (hold up or hold jump)
 WORD plat_float_grav;       //Speed of fall descent while floating
 UBYTE plat_air_control;     //Enables/Disables air control
-UBYTE plat_turn_control;
+UBYTE plat_turn_control;    //Controls the amount of slippage when the player turns while running.
 WORD plat_air_dec;          // air deceleration rate
 UBYTE plat_run_type;        //Chooses type of acceleration for jumping
 WORD plat_turn_acc;         //Speed with which a character turns
@@ -128,7 +135,11 @@ enum pStates {              //Datatype for tracking states
     LADDER_INIT,
     LADDER_STATE,
     WALL_INIT,
-    WALL_STATE
+    WALL_STATE,
+    KNOCKBACK_INIT,
+    KNOCKBACK_STATE,
+    BLANK_INIT,
+    BLANK_STATE
 }; 
 enum pStates plat_state;    //Current platformer state
 UBYTE nocontrol_h;          //Turns off horizontal input, currently only for wall jumping
@@ -357,6 +368,7 @@ void platform_update() BANKED {
         case DASH_INIT:
             plat_state = DASH_STATE;
             jump_type = 0;
+            run_stage = 0;
         case DASH_STATE: {
             //Dash Interrupt for Editor Event.-------------------------------------------------------------------------------
             if(dash_interrupt){
@@ -505,7 +517,6 @@ void platform_update() BANKED {
                             new_y = ((((tile_yz) << 3) - PLAYER.bounds.bottom) << 4) - 1;
                             actor_attached = FALSE; //Detach when MP moves through a solid tile.                                   
                             pl_vel_y = 0;
-                            ground_reset();
                             break;
                         }
                         tile_start++;
@@ -547,6 +558,10 @@ void platform_update() BANKED {
         case GROUND_INIT:
             plat_state = GROUND_STATE;
             jump_type = 0;
+            ct_val = plat_coyote_max; 
+            dj_val = plat_extra_jumps; 
+            wj_val = plat_wall_jump_max;
+            jump_reduction_val = 0;
         case GROUND_STATE:{
             //Horizontal Motion---------------------------------------------------------------------------------------------
             if (INPUT_LEFT) {
@@ -765,6 +780,8 @@ void platform_update() BANKED {
     //================================================================================================================
         case WALL_INIT:
             plat_state = WALL_STATE;
+            jump_type = 0;
+            run_stage = 0;
         case WALL_STATE:{
             //Horizontal Movement----------------------------------------------------------------------------------------
             if (INPUT_LEFT) {
@@ -847,9 +864,9 @@ void platform_update() BANKED {
         break;
     //================================================================================================================
         case FALL_INIT:
-            jump_type = 0;
             plat_state = FALL_STATE;
         case FALL_STATE: {
+            jump_type = 0;  //Keep this here, rather than in init, so that we can easily track float as a jump type  
             //Horizontal Movement----------------------------------------------------------------------------------------
             if (nocontrol_h != 0){
                 //No horizontal input
@@ -874,6 +891,7 @@ void platform_update() BANKED {
                 pl_vel_y += plat_hold_grav;
             } else if (float_press && pl_vel_y > 0){
                 pl_vel_y = plat_float_grav;
+                jump_type = 4;
             } else {
                 //Normal gravity
                 pl_vel_y += plat_grav;
@@ -943,6 +961,98 @@ void platform_update() BANKED {
             }
         }
         break;
+    //================================================================================================================
+        case KNOCKBACK_INIT:
+        run_stage = 0;
+        jump_type = 0;
+        plat_state = KNOCKBACK_STATE;
+        case KNOCKBACK_STATE: {
+            //Horizontal Movement----------------------------------------------------------------------------------------
+            if (pl_vel_x < 0) {
+                    pl_vel_x += plat_dec;
+                    pl_vel_x = MIN(pl_vel_x, 0);
+            } else if (pl_vel_x > 0) {
+                    pl_vel_x -= plat_dec;
+                    pl_vel_x = MAX(pl_vel_x, 0);
+            }
+            deltaX = pl_vel_x;
+        
+            //Vertical Movement--------------------------------------------------------------------------------------------
+            //Normal gravity
+            pl_vel_y += plat_grav;
+        
+            //Collision ---------------------------------------------------------------------------------------------------
+            //Horizontal Collision Checks
+            deltaX = deltaX >> 8;
+            deltaX += actorColX;
+            basic_x_col();
+
+            //Vertical Collision Checks
+            deltaY = pl_vel_y >> 8;
+            deltaY += actorColY;
+            temp_y = PLAYER.pos.y;    
+            deltaY = CLAMP(deltaY, -127, 127);
+            tile_start = (((PLAYER.pos.x >> 4) + PLAYER.bounds.left)  >> 3);
+            tile_end   = (((PLAYER.pos.x >> 4) + PLAYER.bounds.right) >> 3) + 1;
+            if (deltaY > 0) {
+                //Moving Downward
+                WORD new_y = PLAYER.pos.y + deltaY;
+                UBYTE tile_y = ((new_y >> 4) + PLAYER.bounds.bottom) >> 3;
+                while (tile_start != tile_end) {
+                    if (tile_at(tile_start, tile_y) & COLLISION_TOP) {
+                        //Land on Floor
+                        new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
+                        actor_attached = FALSE; //Detach when MP moves through a solid tile.
+                        pl_vel_y = 0;
+                        PLAYER.pos.y = new_y;
+                    }
+                    tile_start++;
+                }
+                PLAYER.pos.y = new_y;
+            } else if (deltaY < 0) {
+                //Moving Upward
+                WORD new_y = PLAYER.pos.y + deltaY;
+                UBYTE tile_y = (((new_y >> 4) + PLAYER.bounds.top) >> 3);
+                while (tile_start != tile_end) {
+                    if (tile_at(tile_start, tile_y) & COLLISION_BOTTOM) {
+                        new_y = ((((UBYTE)(tile_y + 1) << 3) - PLAYER.bounds.top) << 4) + 1;
+                        pl_vel_y = 0;
+                        //MP Test: Attempting stuff to stop the player from continuing upward
+                        if(actor_attached){
+                            actor_attached = FALSE;
+                            new_y = last_actor->pos.y;
+                        }
+                        break;
+                    }
+                    tile_start++;
+                }
+                PLAYER.pos.y = new_y;
+            }
+            // Clamp Y Velocity
+            pl_vel_y = CLAMP(pl_vel_y,-plat_max_fall_vel, plat_max_fall_vel);
+            
+            //ANIMATION--------------------------------------------------------------------------------------------------
+            //No change
+
+            //STATE CHANGE------------------------------------------------------------------------------------------------
+            //None: only player driven events can break out of this state
+        }
+        break;
+    //================================================================================================================
+        case BLANK_INIT:
+        plat_state = BLANK_STATE;
+        pl_vel_x = 0;
+        pl_vel_y = 0;
+        run_stage = 0;
+        jump_type = 0;
+        case BLANK_STATE: {
+            //Movement: None
+            //Collision: None
+            //Animation: No change
+            //State change: none, only player driven events can break out of this state.
+
+        }
+        break;
     }
 
 
@@ -976,7 +1086,6 @@ void platform_update() BANKED {
                         pl_vel_y = 0;
                         actor_attached = TRUE;                        
                         plat_state = GROUND_INIT;
-                        ground_reset();
                         //PLAYER bounds top seems to be 0 and counting down...
                     } else if (temp_y + (PLAYER.bounds.top<<4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
                         actorColY += (hit_actor->pos.y - PLAYER.pos.y) + ((-PLAYER.bounds.top + hit_actor->bounds.bottom)<<4) + 32;
@@ -987,13 +1096,17 @@ void platform_update() BANKED {
 
                     } else if (PLAYER.pos.x < hit_actor->pos.x){
                         actorColX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
-                        pl_vel_x = 0;
+                        if(!INPUT_RIGHT){
+                            pl_vel_x = 0;
+                        }
                         if(plat_state == DASH_STATE){
                             plat_state = FALL_INIT;
                         }
                     } else if (PLAYER.pos.x > hit_actor->pos.x){
                         actorColX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
-                        pl_vel_x = 0;
+                        if (!INPUT_LEFT){
+                            pl_vel_x = 0;
+                        }
                         if(plat_state == DASH_STATE){
                             plat_state = FALL_INIT;
                         }
@@ -1012,7 +1125,6 @@ void platform_update() BANKED {
                         pl_vel_y = 0;
                         actor_attached = TRUE;                        
                         plat_state = GROUND_INIT;
-                        ground_reset();
                     }
                 }
             }
@@ -1041,7 +1153,7 @@ void platform_update() BANKED {
 		jb_val -= 1;
 	}
 	// Counting down Coyote Time Window
-	if (ct_val != 0){
+	if (ct_val != 0 && plat_state != GROUND_STATE){
 		ct_val -= 1;
 	}
     //Counting down Wall Coyote Time
@@ -1464,9 +1576,7 @@ void basic_y_col(UBYTE drop_press) BANKED {
                         if(plat_state != GROUND_STATE){plat_state = GROUND_INIT;}
                         pl_vel_y = 0;
                         //Various things that reset when Grounded
-                        ground_reset();
                         PLAYER.pos.y = new_y;
-                        pl_vel_y = CLAMP(pl_vel_y,-plat_max_fall_vel, plat_max_fall_vel);
                         return;
                     }
                 }
@@ -1499,13 +1609,5 @@ void basic_y_col(UBYTE drop_press) BANKED {
     }
     // Clamp Y Velocity
     pl_vel_y = CLAMP(pl_vel_y,-plat_max_fall_vel, plat_max_fall_vel);
-}
-
-void ground_reset() NONBANKED{
-    //Various things that reset when Grounded
-    ct_val = plat_coyote_max; 
-    dj_val = plat_extra_jumps; 
-    wj_val = plat_wall_jump_max;
-    jump_reduction_val = 0;
 }
 
