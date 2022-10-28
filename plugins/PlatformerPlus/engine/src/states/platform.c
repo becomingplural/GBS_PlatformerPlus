@@ -1,14 +1,11 @@
 /*
 Future notes on things to do:
 - Limit air dashes before touching the ground
-- write event plugin for dash_interrupt
 - Add an option for wall jump that only allows alternating walls.
 - Currently, dashing through walls checks the potential end point, and if it isn't clear then it continues with the normal dash routine. 
     The result is that there could be a valid landing point across a wall, but the player is just a little too close for it to register. 
     I could create a 'look-back' loop that runs through the intervening tiles until it finds an empty landing spot.
 - The bounce event is a funny one, because it can have the player going up without being in the jump state. I should perhaps add some error catching stuff for such situations
-- No control state and nothing state
-- Take new stuff out of actor.c/actor.h
 - Check for a bug with sticking to screen edges anytime the player collision box has a negative X value.
 
 TARGETS for Optimization
@@ -188,7 +185,6 @@ WORD pl_vel_y;              //Tracks the player's y-velocity between frames
 UBYTE grounded;             //Variable to keep compatability with other plugins that use the older 'grounded' check
 BYTE run_stage;             //Tracks the stage of running based on the run type
 UBYTE jump_type;            //Tracks the type of jumping, from the ground, in the air, or off the wall
-UBYTE dash_interrupt;       //A variable that can be used in a future custom event to stop a dash midway
 
 
 void platform_init() BANKED {
@@ -239,7 +235,6 @@ void platform_init() BANKED {
     dj_val = 0;
     wj_val = plat_wall_jump_max;
     dash_end_clear = FALSE;
-    dash_interrupt = FALSE;
     jump_type = 0;
 }
 
@@ -370,12 +365,6 @@ void platform_update() BANKED {
             jump_type = 0;
             run_stage = 0;
         case DASH_STATE: {
-            //Dash Interrupt for Editor Event.-------------------------------------------------------------------------------
-            if(dash_interrupt){
-                dash_currentframe = 0;
-                break;
-            }
-
             //Movement & Collision Combined----------------------------------------------------------------------------------
             //Dashing uses much of the basic collision code. Comments here focus on the differences.
             UBYTE tile_current; //For tracking collisions across longer distances
@@ -1373,7 +1362,7 @@ void dash_check() BANKED {
     UBYTE tile_start, tile_end;
 
     //Pre-check for recharge and script interrupt
-    if (dash_ready_val == 0 && !dash_interrupt){
+    if (dash_ready_val == 0){
         //Start Dashing!
         WORD new_x;
         plat_state = DASH_INIT;
