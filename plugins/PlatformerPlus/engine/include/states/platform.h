@@ -14,7 +14,6 @@ void ladder_check() BANKED;
 void wall_check() BANKED;
 void basic_x_col() BANKED;
 void basic_y_col(UBYTE drop_press) BANKED;
-void ground_reset() NONBANKED;
 
 extern WORD pl_vel_x;
 extern WORD pl_vel_y;
