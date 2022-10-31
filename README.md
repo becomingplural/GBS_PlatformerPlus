@@ -1,3 +1,3 @@
 # GBS_PlatformerPlus
 Platformer+ Plugin for GBStudio
-Version 1.43
+Version 1.44
