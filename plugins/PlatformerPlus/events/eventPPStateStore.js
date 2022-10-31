@@ -35,6 +35,12 @@ const fields = [
   {
     label: "10 = Started Sliding, 11 = On a Wall",
   },
+  {
+    label: "12 = Started Knockback, 13 = Knockback",
+  },
+  {
+    label: "14 = Started Blank, 15 = Blank",
+  },
 ];
 
 const compile = (input, helpers) => {

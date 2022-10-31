@@ -11,9 +11,10 @@ const fields = [
     options: [
       ["mp_attached", "Player on a moving platform (true false)"],
       ["run_stage", "Current run stage (0-4)"],
-      ["jump_type", "Current jump type (0: none, 1: ground, 2: double, 3: wall)"],
+      ["jump_type", "Current jump type (0: none, 1: ground, 2: double, 3: wall, 4: floating)"],
       ["ct_val", "Frames of coyote time left"],
       ["dash_interrupt", "Checks if Dashing is Frozen (true false)"],
+      ["player_angle", "Direction to player (EXPERIMENT)"],
     ],
   },
   {
@@ -32,6 +33,7 @@ const compile = (input, helpers) => {
     jump_type: "UINT8",
     dash_interrupt: "UINT8",
     ct_val: "UINT8",
+    player_angle: "UINT8",
   };
 
   const fieldName = `_${input.field}`;

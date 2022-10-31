@@ -9,7 +9,6 @@ void acceleration(BYTE dir) BANKED;
 void deceleration() BANKED;
 void basic_anim() BANKED;
 void dash_check() BANKED;
-void jump_init() BANKED;
 void ladder_check() BANKED;
 void wall_check() BANKED;
 void basic_x_col() BANKED;
