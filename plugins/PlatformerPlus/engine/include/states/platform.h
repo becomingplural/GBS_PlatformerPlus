@@ -8,7 +8,6 @@ void platform_update();
 void acceleration(BYTE dir) BANKED;
 void deceleration() BANKED;
 void basic_anim() BANKED;
-void dash_check() BANKED;
 void ladder_check() BANKED;
 void wall_check() BANKED;
 void basic_x_col() BANKED;
@@ -28,6 +27,7 @@ extern WORD plat_grav;
 extern WORD plat_hold_grav;
 extern WORD plat_max_fall_vel;
 
+extern UBYTE plat_camera_deadzone_x;
 extern UBYTE plat_drop_through;   
 extern UBYTE plat_mp_group;        
 extern UBYTE plat_solid_group;    

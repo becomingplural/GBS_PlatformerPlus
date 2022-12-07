@@ -1,0 +1,43 @@
+{
+  "version": "3.1.0-e15",
+
+  "fields": [    
+    {
+      "key": "plat_camera_follow",
+      "label": "Camera Follow Directions",
+      "group": "Platformer Plus",
+      "type": "select",
+      "options": [
+        [15, "All"],
+        [1, "Right"],
+        [9, "Right and Up"],
+        [5, "Right and Down"],
+        [13, "Right, Up and Down"],
+        [2, "Left"],
+        [10, "Left and Up"],
+        [6, "Left and Down"],
+        [14, "Left, Up and Down"],
+        [3, "Left and Right"],
+        [8, "Up"],
+        [11, "Up, Left and Right"],
+        [4, "Down"],
+        [7, "Down, Left and Right"],
+        [12, "Up and Down"],
+        [0, "None"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
+      "key": "plat_camera_lead",
+      "label": "Camera Forward Focus",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 0,
+      "min": 0,
+      "max": 32
+    }
+
+  ]
+}

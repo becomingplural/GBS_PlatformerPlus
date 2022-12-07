@@ -3,6 +3,16 @@
 
   "fields": [    
     {
+      "key": "plat_camera_deadzone_x",
+      "label": "Camera Deadzone X",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 0,
+      "min": 0,
+      "max": 32
+    },
+    {
       "key": "plat_drop_through",
       "label": "Drop Through Platforms",
       "group": "Platformer Plus",

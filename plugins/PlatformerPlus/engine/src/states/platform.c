@@ -7,6 +7,7 @@ Future notes on things to do:
     I could create a 'look-back' loop that runs through the intervening tiles until it finds an empty landing spot.
 - The bounce event is a funny one, because it can have the player going up without being in the jump state. I should perhaps add some error catching stuff for such situations
 - Can I have a wall_jump init ahead of the normal jump init? If it's just checking a few more boxes....
+- I think I can probably combine actor_attached and last_actor
 
 TARGETS for Optimization
 - Is there any way to simplify the number of if branches with the solid actors?
@@ -68,9 +69,6 @@ For some of the sub-stages, common versions are carved off into seperate functio
 #ifndef INPUT_PLATFORM_INTERACT
 #define INPUT_PLATFORM_INTERACT    INPUT_A
 #endif
-#ifndef PLATFORM_CAMERA_DEADZONE_X
-#define PLATFORM_CAMERA_DEADZONE_X 4
-#endif
 #ifndef PLATFORM_CAMERA_DEADZONE_Y
 #define PLATFORM_CAMERA_DEADZONE_Y 16
 #endif
@@ -91,6 +89,7 @@ WORD plat_max_fall_vel;
 
 //PLATFORMER PLUS ENGINE VARIABLES
 //All engine fields are prefixed with plat_
+UBYTE plat_camera_deadzone_x; // Camera deadzone
 UBYTE plat_drop_through;    //Drop-through control
 UBYTE plat_mp_group;        //Collision group for platform actors
 UBYTE plat_solid_group;     //Collision group for solid actors
@@ -188,6 +187,11 @@ UBYTE jump_type;            //Tracks the type of jumping, from the ground, in th
 
 
 void platform_init() BANKED {
+    camera_offset_x = 0;
+    camera_offset_y = 0;
+    camera_deadzone_x = plat_camera_deadzone_x;
+    camera_deadzone_y = PLATFORM_CAMERA_DEADZONE_Y;
+    
     //Make sure jumping doesn't overflow variables
     //First, check for jumping based on Frames and Initial Jump Min
     while (32000 - (plat_jump_vel/MIN(15,plat_hold_jump_max)) - plat_jump_min < 0){
@@ -222,10 +226,6 @@ void platform_init() BANKED {
     }
 
     //Initialize other vars
-    camera_offset_x = 0;
-    camera_offset_y = 0;
-    camera_deadzone_x = PLATFORM_CAMERA_DEADZONE_X;
-    camera_deadzone_y = PLATFORM_CAMERA_DEADZONE_Y;
     game_time = 0;
     pl_vel_x = 0;
     pl_vel_y = plat_grav << 2;
@@ -1255,7 +1255,7 @@ void platform_update() BANKED {
     }
 
     //Hone Camera after the player has dashed
-    if (camera_deadzone_x > PLATFORM_CAMERA_DEADZONE_X){
+    if (camera_deadzone_x > plat_camera_deadzone_x){
         camera_deadzone_x -= 1;
     }
 
@@ -1476,7 +1476,6 @@ void wall_check() BANKED {
 }
 
 void basic_x_col() BANKED {
-    
     UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
     UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;        
     col = 0;
