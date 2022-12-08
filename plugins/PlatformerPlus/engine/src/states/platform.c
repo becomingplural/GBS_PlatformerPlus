@@ -719,7 +719,7 @@ void platform_update() BANKED {
                 }
             }
             //GROUND -> JUMP Check
-            if (plat_state != DASH_STATE && nocollide == 0){  //Revisit this
+            if (plat_state != DASH_INIT && nocollide == 0){  //Revisit this
                 if (INPUT_PRESSED(INPUT_PLATFORM_JUMP)){
                     //Standard Jump
                     jump_type = 1;
