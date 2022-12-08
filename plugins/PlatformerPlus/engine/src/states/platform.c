@@ -282,9 +282,24 @@ void platform_update() BANKED {
 
     //Drop Through Press
     UBYTE drop_press = FALSE;
-    if ((plat_drop_through == 1 && INPUT_DOWN ) || (plat_drop_through == 2 && INPUT_DOWN && INPUT_PLATFORM_JUMP)){
-        drop_press = TRUE;
+    switch(plat_drop_through){
+        case 1:
+        if(INPUT_DOWN){
+            drop_press = TRUE;
+        }
+        break;
+        case 2:
+        if (INPUT_PRESSED(INPUT_DOWN)){
+            drop_press = TRUE;
+        }
+        break;
+        case 3:
+        if (INPUT_DOWN && INPUT_PLATFORM_JUMP){
+            drop_press = TRUE;
+        }
+        break;
     }
+ 
     //FLOAT INPUT
     UBYTE float_press = FALSE;
     if ((plat_float_input == 1 && INPUT_PLATFORM_JUMP) || (plat_float_input == 2 && INPUT_UP)){

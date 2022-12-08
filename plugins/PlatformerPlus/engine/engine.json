@@ -19,8 +19,9 @@
       "type": "select",
       "options": [
         [0, "Off"],
-        [1, "Down Button"],
-        [2, "Down and Jump"]
+        [1, "Down (Hold)"],
+        [2, "Down (Tap)"],
+        [3, "Down and Jump"]
       ],
       "cType": "UBYTE",
       "defaultValue": 1
