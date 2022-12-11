@@ -5,7 +5,7 @@
     {
       "key": "plat_camera_deadzone_x",
       "label": "Camera Deadzone X",
-      "group": "Platformer Plus",
+      "group": "Platformer Plus Level Controls",
       "type": "slider",
       "cType": "UBYTE",
       "defaultValue": 0,
@@ -13,9 +13,23 @@
       "max": 32
     },
     {
+      "key": "plat_camera_block",
+      "label": "Lock Player to Camera Edge",
+      "group": "Platformer Plus Level Controls",
+      "type": "select",
+      "options": [
+        [0, "None"],
+        [1, "Left"],
+        [2, "Right"],
+        [3, "Both"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
+    },
+    {
       "key": "plat_drop_through",
       "label": "Drop Through Platforms",
-      "group": "Platformer Plus",
+      "group": "Platformer Plus Level Controls",
       "type": "select",
       "options": [
         [0, "Off"],
@@ -29,7 +43,7 @@
     {
       "key": "plat_mp_group",
       "label": "Platform Actor Collision Group",
-      "group": "Platformer Plus",
+      "group": "Platformer Plus Level Controls",
       "type": "select",
       "options": [
         [0, "None"],
@@ -43,7 +57,7 @@
     {
       "key": "plat_solid_group",
       "label": "Solid Actor Collision Group",
-      "group": "Platformer Plus",
+      "group": "Platformer Plus Level Controls",
       "type": "select",
       "options": [
         [0, "None"],

@@ -5,6 +5,8 @@
 
 void platform_init();
 void platform_update();
+void trigger_check() BANKED;
+void actor_check(WORD temp_y) BANKED;
 void acceleration(BYTE dir) BANKED;
 void deceleration() BANKED;
 void basic_anim() BANKED;
@@ -28,6 +30,7 @@ extern WORD plat_hold_grav;
 extern WORD plat_max_fall_vel;
 
 extern UBYTE plat_camera_deadzone_x;
+extern UBYTE plat_camera_block;
 extern UBYTE plat_drop_through;   
 extern UBYTE plat_mp_group;        
 extern UBYTE plat_solid_group;    

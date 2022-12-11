@@ -22,6 +22,7 @@ extern UBYTE camera_deadzone_y;
 extern UBYTE camera_settings;
 extern UBYTE plat_camera_follow;
 extern UBYTE plat_camera_lead;
+extern UBYTE plat_camera_catchup;
 extern WORD pl_vel_x;
 //plat_camera_follow stores info as 4 bits: Up, Down, Left, Right
 

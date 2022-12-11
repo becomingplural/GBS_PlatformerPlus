@@ -7,11 +7,16 @@ Future notes on things to do:
     I could create a 'look-back' loop that runs through the intervening tiles until it finds an empty landing spot.
 - The bounce event is a funny one, because it can have the player going up without being in the jump state. I should perhaps add some error catching stuff for such situations
 - Can I have a wall_jump init ahead of the normal jump init? If it's just checking a few more boxes....
-- I think I can probably combine actor_attached and last_actor
+- Improve ladder situation: jump from ladder option, bug with hitting the bottom of ladders, other stuff?
+
+- Add check for camera bounds on Dash Init
 
 TARGETS for Optimization
 - Is there any way to simplify the number of if branches with the solid actors?
 - It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
+- I think I can probably combine actor_attached and last_actor
+
+- The checks for camera movement around ordinary collision seem like they could be better organized/optimized, perhaps using methods I have on the work computer.
 
 THINGS TO WATCH
 - Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
@@ -38,8 +43,8 @@ UPDATE()
             4. Check for collisions with Vertical Movement
             5. Update animations
             6. Check for changes to the current state
-    C.Check for collisions with triggers and actors
-    D.Update counters
+            7. Check for collisions with triggers and actors
+    C.Update counters
 
 For some of the sub-stages, common versions are carved off into seperate functions. 
 
@@ -90,6 +95,7 @@ WORD plat_max_fall_vel;
 //PLATFORMER PLUS ENGINE VARIABLES
 //All engine fields are prefixed with plat_
 UBYTE plat_camera_deadzone_x; // Camera deadzone
+UBYTE plat_camera_block;    //Limit the player's movement to the camera's edges
 UBYTE plat_drop_through;    //Drop-through control
 UBYTE plat_mp_group;        //Collision group for platform actors
 UBYTE plat_solid_group;     //Collision group for solid actors
@@ -169,6 +175,8 @@ WORD deltaX;                //Change in X velocity this frame. Necessary to add 
 WORD deltaY;                //Change in y velocity this frame
 WORD actorColX;             //Offset from colliding with a solid actor in the previous frame from the side
 WORD actorColY;             //As above but for hitting the roof
+WORD edgeLeft;              //Stores either the camera edge or the world edge
+WORD edgeRight;             //Ditto but for the right side
 
 //JUMPING VARIABLES
 WORD jump_reduction_val;    //Holds a temporary jump velocity reduction
@@ -191,6 +199,18 @@ void platform_init() BANKED {
     camera_offset_y = 0;
     camera_deadzone_x = plat_camera_deadzone_x;
     camera_deadzone_y = PLATFORM_CAMERA_DEADZONE_Y;
+    if ((camera_settings & CAMERA_LOCK_X_FLAG)){
+        camera_x = (PLAYER.pos.x >> 4) + 8;
+    } else{
+        camera_x = 0;
+    }
+    if ((camera_settings & CAMERA_LOCK_Y_FLAG)){
+        camera_y = (PLAYER.pos.y >> 4) + 8;
+    } else{
+        camera_y = 0;
+    }
+
+    edgeRight = (camera_x + SCREEN_WIDTH_HALF-16) << 4;
     
     //Make sure jumping doesn't overflow variables
     //First, check for jumping based on Frames and Initial Jump Min
@@ -209,8 +229,8 @@ void platform_init() BANKED {
     //Normalize variables by number of frames
     jump_per_frame = plat_jump_vel / MIN(15, plat_hold_jump_max);   //jump force applied per frame in the JUMP_STATE
     jump_reduction = plat_jump_reduction / plat_hold_jump_max;      //Amount to reduce subequent jumps per frame in JUMP_STATE
-    dash_dist = plat_dash_dist/plat_dash_frames;                    //Dash distance per frame in the DASH_STATE
-    boost_val = plat_run_boost/plat_hold_jump_max;                  //Vertical boost from horizontal speed per frame in JUMP STATE
+    dash_dist = plat_dash_dist / plat_dash_frames;                    //Dash distance per frame in the DASH_STATE
+    boost_val = plat_run_boost / plat_hold_jump_max;                  //Vertical boost from horizontal speed per frame in JUMP STATE
 
     //Initialize State
     plat_state = FALL_INIT;
@@ -240,7 +260,7 @@ void platform_init() BANKED {
 
 void platform_update() BANKED {
     //INITIALIZE VARS
-    actor_t *hit_actor;
+
     UBYTE tile_start, tile_end;     //I'm not sure why I can't localize these into the states that use them. Seems to be a leak. But maybe it's a switch issue.
     WORD temp_y = 0;
     deltaX = 0;                     //DeltaX/DeltaY measure change in distance per frame. Reset here.
@@ -371,7 +391,8 @@ void platform_update() BANKED {
                 plat_state = FALL_INIT;
             }
 
-
+            trigger_check();
+            actor_check(temp_y);
         }
         break;
     //================================================================================================================
@@ -402,7 +423,8 @@ void platform_update() BANKED {
                 //Do a collision check at the final landing spot (but not all the steps in-between.)
                 if (PLAYER.dir == DIR_RIGHT){
                     //Don't dash off the screen to the right
-                    if (PLAYER.pos.x + (PLAYER.bounds.right <<4) + (dash_dist*(plat_dash_frames)) > (image_width -16) <<4){   
+                    //Use this check for camera edge too
+                    if (PLAYER.pos.x + (PLAYER.bounds.right <<4) + (dash_dist*(plat_dash_frames)) > (image_width -16) << 4){   
                         dash_end_clear = false;                                     
                     } else{
                         UBYTE tile_xr = (((new_x >> 4) + PLAYER.bounds.right) >> 3) +1;  
@@ -464,6 +486,8 @@ void platform_update() BANKED {
             col = 0;
 
             //Right Dash Movement & Collision
+            actorColX = 0;  //These vars are used to track the offset from solid actors each frame. Resetting them here so they can also be used in edge-pushing
+            actorColY = 0;
             if (PLAYER.dir == DIR_RIGHT){
                 //Get tile x-coord of player position
                 tile_current = ((PLAYER.pos.x >> 4) + PLAYER.bounds.right) >> 3;
@@ -632,6 +656,16 @@ void platform_update() BANKED {
             if (dash_currentframe == 0){
                 plat_state = FALL_INIT;
             }
+
+            //CHECKS-------------------------------------------------------------------------------------------------------
+            if(plat_dash_through < 2){
+                trigger_check();
+            }
+            
+            if(plat_dash_through == 0){
+                actor_check(temp_y);
+            }
+
         }
         break;  
     //================================================================================================================
@@ -749,6 +783,10 @@ void platform_update() BANKED {
                     ladder_check();
                 }
             }
+
+            //CHECKS----------------------------------------------------------------------------------------------------
+            trigger_check();
+            actor_check(temp_y);
         }
         break;
     //================================================================================================================
@@ -861,6 +899,9 @@ void platform_update() BANKED {
                 ladder_check();
             }
 
+            //CHECKS--------------------------------------------------------------------------------------------------
+            trigger_check();
+            actor_check(temp_y);
 
         }
         break;
@@ -947,6 +988,9 @@ void platform_update() BANKED {
                     ladder_check();
                 }
             }
+            //CHECKS--------------------------------------------------------------------------------------------------
+            trigger_check();
+            actor_check(temp_y);
         }
         break;
     //================================================================================================================
@@ -1045,6 +1089,10 @@ void platform_update() BANKED {
                     ladder_check();
                 } 
             }
+
+            //CHECKS
+            trigger_check();
+            actor_check(temp_y);
         }
         break;
     //================================================================================================================
@@ -1122,6 +1170,9 @@ void platform_update() BANKED {
 
             //STATE CHANGE------------------------------------------------------------------------------------------------
             //None: only player driven events can break out of this state
+            //CHECKS--------------------------------------------------------------------------------------------------
+            trigger_check();
+            actor_check(temp_y);
         }
         break;
     //================================================================================================================
@@ -1136,128 +1187,51 @@ void platform_update() BANKED {
             //Collision: None
             //Animation: No change
             //State change: none, only player driven events can break out of this state.
+            //CHECKS-------------------------------------------------------------------------------------------------
+            trigger_check();
+            actor_check(temp_y);
 
         }
         break;
     }
 
-
-    // C. TRIGGER AND ACTOR COLLISIONS===============================================================================
-    // Check for trigger collisions
-    if(plat_state != DASH_STATE || plat_dash_through < 2){
-        if (trigger_activate_at_intersection(&PLAYER.bounds, &PLAYER.pos, INPUT_UP_PRESSED)) {
-            // Landed on a trigger
-            return;
-        }
-    }
-
-    //Don't hit actors while dashing
-    actorColX = 0;  //These vars are used to track the offset from solid actors each frame. Reseting them here.
-    actorColY = 0;
-
-    if(plat_state != DASH_STATE || plat_dash_through == 0){
-        //Actor Collisions
-        hit_actor = actor_overlapping_player(FALSE);
-        if (hit_actor != NULL && hit_actor->collision_group) {
-            //Solid Actors
-            if (hit_actor->collision_group == plat_solid_group){
-                if(!actor_attached || hit_actor != last_actor){
-                    if (temp_y < (hit_actor->pos.y + (hit_actor->bounds.top << 4)) && pl_vel_y >= 0){
-                        //Attach to MP
-                        last_actor = hit_actor;
-                        mp_last_x = hit_actor->pos.x;
-                        mp_last_y = hit_actor->pos.y;
-                        PLAYER.pos.y = hit_actor->pos.y + (hit_actor->bounds.top << 4) - (PLAYER.bounds.bottom << 4) - 4;
-                        //Other cleanup
-                        pl_vel_y = 0;
-                        actor_attached = TRUE;                        
-                        plat_state = GROUND_INIT;
-                        //PLAYER bounds top seems to be 0 and counting down...
-                    } else if (temp_y + (PLAYER.bounds.top<<4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
-                        actorColY += (hit_actor->pos.y - PLAYER.pos.y) + ((-PLAYER.bounds.top + hit_actor->bounds.bottom)<<4) + 32;
-                        pl_vel_y = plat_grav;
-                        if(plat_state == JUMP_STATE){
-                            plat_state = FALL_INIT;
-                        }
-
-                    } else if (PLAYER.pos.x < hit_actor->pos.x){
-                        actorColX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
-                        if(!INPUT_RIGHT){
-                            pl_vel_x = 0;
-                        }
-                        if(plat_state == DASH_STATE){
-                            plat_state = FALL_INIT;
-                        }
-                    } else if (PLAYER.pos.x > hit_actor->pos.x){
-                        actorColX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
-                        if (!INPUT_LEFT){
-                            pl_vel_x = 0;
-                        }
-                        if(plat_state == DASH_STATE){
-                            plat_state = FALL_INIT;
-                        }
-                    }
-                }
-            } else if (hit_actor->collision_group == plat_mp_group){
-                //Platform Actors
-                if(!actor_attached || hit_actor != last_actor){
-                    if (temp_y < hit_actor->pos.y + (hit_actor->bounds.top << 4) && pl_vel_y >= 0){
-                        //Attach to MP
-                        last_actor = hit_actor;
-                        mp_last_x = hit_actor->pos.x;
-                        mp_last_y = hit_actor->pos.y;
-                        PLAYER.pos.y = hit_actor->pos.y + (hit_actor->bounds.top << 4) - (PLAYER.bounds.bottom << 4) - 4;
-                        //Other cleanup
-                        pl_vel_y = 0;
-                        actor_attached = TRUE;                        
-                        plat_state = GROUND_INIT;
-                    }
-                }
-            }
-            //All Other Collisions
-            player_register_collision_with(hit_actor);
-        } else if (INPUT_PRESSED(INPUT_PLATFORM_INTERACT)) {
-            if (!hit_actor) {
-                hit_actor = actor_in_front_of_player(8, TRUE);
-            }
-            if (hit_actor && !hit_actor->collision_group && hit_actor->script.bank) {
-                script_execute(hit_actor->script.bank, hit_actor->script.ptr, 0, 1, 0);
-            }
-        }
-    }
-
-
-
     //COUNTERS===============================================================
     // Counting Down Dash Frames
+    // Only used in Dash State
     if (dash_currentframe != 0){
         dash_currentframe -= 1;
     }
  
 	// Counting down Jump Buffer Window
+    // Set in Fall and checked in Ground state
 	if (jb_val != 0){
 		jb_val -= 1;
 	}
 	// Counting down Coyote Time Window
+    // Set in ground and checked in fall state
 	if (ct_val != 0 && plat_state != GROUND_STATE){
 		ct_val -= 1;
 	}
     //Counting down Wall Coyote Time
+    // Set in collisions and checked in fall state
     if (wc_val !=0 && col == 0){
         wc_val -= 1;
     }
 
     // Counting down No Control frames
+    // Set in Wall and Fall states, checked in Fall and Jump states
     if (nocontrol_h != 0){
         nocontrol_h -= 1;
     }
     
     // Counting down the drop-through floor frames
+    // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
     if (nocollide != 0){
         nocollide -= 1;
     }
 
     // Counting down until dashing is ready again
+    // XX Set in dash Init and checked in wall, fall, ground, and jump states
     if (dash_ready_val != 0){
         dash_ready_val -=1;
     }
@@ -1281,6 +1255,86 @@ void platform_update() BANKED {
     } else{
         grounded = false;
     }
+}
+
+void trigger_check() BANKED{
+    if (trigger_activate_at_intersection(&PLAYER.bounds, &PLAYER.pos, INPUT_UP_PRESSED)) {
+        // Landed on a trigger
+        return;
+    }
+}
+
+void actor_check(WORD temp_y) BANKED {
+    //Actor Collisions
+    actor_t *hit_actor;
+    hit_actor = actor_overlapping_player(FALSE);
+    if (hit_actor != NULL && hit_actor->collision_group) {
+        //Solid Actors
+        if (hit_actor->collision_group == plat_solid_group){
+            if(!actor_attached || hit_actor != last_actor){
+                if (temp_y < (hit_actor->pos.y + (hit_actor->bounds.top << 4)) && pl_vel_y >= 0){
+                    //Attach to MP
+                    last_actor = hit_actor;
+                    mp_last_x = hit_actor->pos.x;
+                    mp_last_y = hit_actor->pos.y;
+                    PLAYER.pos.y = hit_actor->pos.y + (hit_actor->bounds.top << 4) - (PLAYER.bounds.bottom << 4) - 4;
+                    //Other cleanup
+                    pl_vel_y = 0;
+                    actor_attached = TRUE;                        
+                    plat_state = GROUND_INIT;
+                    //PLAYER bounds top seems to be 0 and counting down...
+                } else if (temp_y + (PLAYER.bounds.top<<4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
+                    actorColY += (hit_actor->pos.y - PLAYER.pos.y) + ((-PLAYER.bounds.top + hit_actor->bounds.bottom)<<4) + 32;
+                    pl_vel_y = plat_grav;
+                    if(plat_state == JUMP_STATE){
+                        plat_state = FALL_INIT;
+                    }
+
+                } else if (PLAYER.pos.x < hit_actor->pos.x){
+                    actorColX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
+                    if(!INPUT_RIGHT){
+                        pl_vel_x = 0;
+                    }
+                    if(plat_state == DASH_STATE){
+                        plat_state = FALL_INIT;
+                    }
+                } else if (PLAYER.pos.x > hit_actor->pos.x){
+                    actorColX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
+                    if (!INPUT_LEFT){
+                        pl_vel_x = 0;
+                    }
+                    if(plat_state == DASH_STATE){
+                        plat_state = FALL_INIT;
+                    }
+                }
+            }
+        } else if (hit_actor->collision_group == plat_mp_group){
+            //Platform Actors
+            if(!actor_attached || hit_actor != last_actor){
+                if (temp_y < hit_actor->pos.y + (hit_actor->bounds.top << 4) && pl_vel_y >= 0){
+                    //Attach to MP
+                    last_actor = hit_actor;
+                    mp_last_x = hit_actor->pos.x;
+                    mp_last_y = hit_actor->pos.y;
+                    PLAYER.pos.y = hit_actor->pos.y + (hit_actor->bounds.top << 4) - (PLAYER.bounds.bottom << 4) - 4;
+                    //Other cleanup
+                    pl_vel_y = 0;
+                    actor_attached = TRUE;                        
+                    plat_state = GROUND_INIT;
+                }
+            }
+        }
+        //All Other Collisions
+        player_register_collision_with(hit_actor);
+    } else if (INPUT_PRESSED(INPUT_PLATFORM_INTERACT)) {
+        if (!hit_actor) {
+            hit_actor = actor_in_front_of_player(8, TRUE);
+        }
+        if (hit_actor && !hit_actor->collision_group && hit_actor->script.bank) {
+            script_execute(hit_actor->script.bank, hit_actor->script.ptr, 0, 1, 0);
+        }
+    }
+
 }
 
 void acceleration(BYTE dir) BANKED {
@@ -1491,41 +1545,65 @@ void wall_check() BANKED {
 }
 
 void basic_x_col() BANKED {
+    actorColX = 0;  //These vars are used to track the offset from solid actors each frame. Resetting them here so they can also be used in edge-pushing
+    actorColY = 0;
     UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
     UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;        
     col = 0;
     deltaX = CLAMP(deltaX, -127, 127);
     if (deltaX > 0) {
         UWORD new_x = PLAYER.pos.x + deltaX;
-        UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.right) >> 3;
-        while (tile_start != tile_end) {
-            if (tile_at(tile_x, tile_start) & COLLISION_LEFT) {
-                new_x = (((tile_x << 3) - PLAYER.bounds.right) << 4) - 1;
-                pl_vel_x = 0;
-                col = 1;
-                last_wall = 1;
-                wc_val = plat_coyote_max;
-                break;
+        //Currently this works for a) running at the moving edge, and b) collision when running left, but breaks collision when c) off the screen moving right:
+        //it immediately pops the the character to the LEFT side of the colliding block...
+        if (new_x < (camera_x + SCREEN_WIDTH_HALF-16) << 4 || !(plat_camera_block & 2)){        
+            UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.right) >> 3;
+            while (tile_start != tile_end) {
+                if (tile_at(tile_x, tile_start) & COLLISION_LEFT) {
+                    new_x = (((tile_x << 3) - PLAYER.bounds.right) << 4) - 1;
+                    pl_vel_x = 0;
+                    col = 1;
+                    last_wall = 1;
+                    wc_val = plat_coyote_max;
+                    break;
+                }
+                tile_start++;
             }
-            tile_start++;
+            PLAYER.pos.x = new_x;
         }
-        PLAYER.pos.x = MIN((image_width - 16) << 4, new_x);
+        else {
+            //If off the screen to the right and pressing right
+            actorColX += (((camera_x + SCREEN_WIDTH_HALF - 16) << 4) - PLAYER.pos.x);
+        } 
     } else if (deltaX < 0) {      
         WORD new_x = PLAYER.pos.x + deltaX;
-        UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.left) >> 3;
-        while (tile_start != tile_end) {
-            if (tile_at(tile_x, tile_start) & COLLISION_RIGHT) {
-                new_x = ((((tile_x + 1) << 3) - PLAYER.bounds.left) << 4) + 1;
-                pl_vel_x = 0;
-                col = -1;
-                last_wall = -1;
-                wc_val = plat_coyote_max;
-                break;
+        if ((new_x > (camera_x - SCREEN_WIDTH_HALF) << 4) || !(plat_camera_block & 1)) {
+            UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.left) >> 3;
+            while (tile_start != tile_end) {
+                if (tile_at(tile_x, tile_start) & COLLISION_RIGHT) {
+                    new_x = ((((tile_x + 1) << 3) - PLAYER.bounds.left) << 4) + 1;
+                    pl_vel_x = 0;
+                    col = -1;
+                    last_wall = -1;
+                    wc_val = plat_coyote_max;
+                    break;
+                }
+                tile_start++;
             }
-            tile_start++;
+            PLAYER.pos.x = MAX(0, new_x);
+        } else {
+            //If off the screen to the left and pressing left
+            actorColX += (((camera_x - SCREEN_WIDTH_HALF) << 4) - PLAYER.pos.x);
         }
-        PLAYER.pos.x = MAX(0, new_x);
     }
+    //Add simpler check here for camera bounds first...
+    //If off the screen and not pressing anything -> Move towards the screen
+    else if (PLAYER.pos.x < (camera_x - SCREEN_WIDTH_HALF) << 4 && plat_camera_block & 1){
+        actorColX = (((camera_x - SCREEN_WIDTH_HALF) << 4) - PLAYER.pos.x);
+    }
+        else if ((PLAYER.pos.x > (camera_x + SCREEN_WIDTH_HALF-16) << 4) && plat_camera_block & 2)  {
+        actorColX = (((camera_x + SCREEN_WIDTH_HALF - 16) << 4) - PLAYER.pos.x);
+    }
+
 }
 
 void basic_y_col(UBYTE drop_press) BANKED {

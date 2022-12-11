@@ -5,7 +5,7 @@
     {
       "key": "plat_camera_follow",
       "label": "Camera Follow Directions",
-      "group": "Platformer Plus",
+      "group": "Platformer Plus Level Controls",
       "type": "select",
       "options": [
         [15, "All"],
@@ -31,12 +31,29 @@
     {
       "key": "plat_camera_lead",
       "label": "Camera Forward Focus",
-      "group": "Platformer Plus",
+      "group": "Platformer Plus Level Controls",
       "type": "slider",
       "cType": "UBYTE",
       "defaultValue": 0,
       "min": 0,
-      "max": 32
+      "max": 48
+    },
+    {
+      "key": "plat_camera_catchup",
+      "label": "Camera Catch-up Speed",
+      "group": "Platformer Plus Level Controls",
+      "type": "select",
+      "options": [
+        [0, "0 (Instant)"],
+        [1, "1"],
+        [2, "2"],
+        [3, "3"],
+        [4, "4"],
+        [5, "5"],
+        [6, "6 (Slowest)"]
+      ],
+      "cType": "UBYTE",
+      "defaultValue": 0
     }
 
   ]
