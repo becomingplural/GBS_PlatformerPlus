@@ -15,8 +15,10 @@ TARGETS for Optimization
 - Is there any way to simplify the number of if branches with the solid actors?
 - It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
 - I think I can probably combine actor_attached and last_actor
-
+- Reuse counters that aren't shared across states...
 - The checks for camera movement around ordinary collision seem like they could be better organized/optimized, perhaps using methods I have on the work computer.
+    A) Use an edge var that changes on init and uses an address reference for the camera_x vs. world edge
+    B) Try and remove the min/max element, and see if the camera edge can substitute. The one potential bug is that this could let the player move off-scene while offscreen
 
 THINGS TO WATCH
 - Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
@@ -25,7 +27,8 @@ THINGS TO WATCH
 NOTES on GBStudio Quirks
 - 256 velocities per position, 16 'positions' per pixel, 8 pixels per tile
 - Player bounds: for an ordinary 16x16 sprite, bounds.left starts at 0 and bounds.right starts at 16. If it's smaller, bounds.left is POSITIVE
-- For bounds.top, however, Y starts counting from the middle of a sprite. bounds.top is negative and bounds.bottom is positive 
+- For bounds.top, however, Y starts counting from the middle of a sprite. bounds.top is negative and bounds.bottom is positive
+- CameraX is in the middle of the screen
 
 GENERAL STRUCTURE OF THIS FILE
 Init()
@@ -423,10 +426,9 @@ void platform_update() BANKED {
                 //Do a collision check at the final landing spot (but not all the steps in-between.)
                 if (PLAYER.dir == DIR_RIGHT){
                     //Don't dash off the screen to the right
-                    //Use this check for camera edge too
                     if (PLAYER.pos.x + (PLAYER.bounds.right <<4) + (dash_dist*(plat_dash_frames)) > (image_width -16) << 4){   
                         dash_end_clear = false;                                     
-                    } else{
+                    } else {
                         UBYTE tile_xr = (((new_x >> 4) + PLAYER.bounds.right) >> 3) +1;  
                         UBYTE tile_xl = ((new_x >> 4) + PLAYER.bounds.left) >> 3;   
                         while (tile_xl != tile_xr){                                             //This checks all the tiles between the left bounds and the right bounds
@@ -443,9 +445,9 @@ void platform_update() BANKED {
                     }
                 } else if(PLAYER.dir == DIR_LEFT) {
                     //Don't dash off the screen to the left
-                    if (PLAYER.pos.x <= ((dash_dist*(plat_dash_frames))+(PLAYER.bounds.left << 4))+(8<<4)){
+                    if (PLAYER.pos.x <= ((dash_dist*plat_dash_frames)+(PLAYER.bounds.left << 4))+(8<<4)){
                         dash_end_clear = false;         //To get around unsigned position, test if the player's current position is less than the total dist.
-                    } else{
+                    } else {
                         UBYTE tile_xl = ((new_x >> 4) + PLAYER.bounds.left) >> 3;
                         UBYTE tile_xr = (((new_x >> 4) + PLAYER.bounds.right) >> 3) +1;  
 
@@ -498,7 +500,13 @@ void platform_update() BANKED {
                 //in the future, I should build a reversed version of this section for dashing through walls.
                 //However, it's not quite as simple as reversing the direction of the check. The loops need to store the player's width and only return when there are enough spaces in a row
                 while (tile_current != tile_x){
-                    //CHECK TOP AND BOTTOM
+                    //Don't go past camera bounds
+                    if ((plat_camera_block & 2) && tile_current > (camera_x + SCREEN_WIDTH_HALF - 16) >> 3){
+                        new_x = ((((tile_current) << 3) - PLAYER.bounds.right) << 4) -1;
+                        dash_currentframe == 0;
+                        goto endRcol;
+                    }
+                        //CHECK TOP AND BOTTOM
                     while (tile_start != tile_end) {
                         //Check for Collisions (if the player collides with walls)
                         if(plat_dash_through != 3 || dash_end_clear == FALSE){                    
@@ -520,6 +528,7 @@ void platform_update() BANKED {
                         }
                         tile_start++;
                     }
+                    
                     tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top) >> 3);
                     tile_current += 1;
                 }
@@ -542,6 +551,12 @@ void platform_update() BANKED {
                 UBYTE tile_x = (((new_x >> 4) + PLAYER.bounds.left) >> 3)-1;
                 //CHECK EACH SPACE FROM START TO END
                 while (tile_current != tile_x){
+                    //Camera lock check
+                    if ((plat_camera_block & 1) && tile_current < (camera_x - SCREEN_WIDTH_HALF) >> 3){
+                        new_x = ((((tile_current + 1) << 3) - PLAYER.bounds.left) << 4)+1;
+                        dash_currentframe == 0;
+                        goto endLcol;
+                    }
                     //CHECK TOP AND BOTTOM
                     while (tile_start != tile_end) {   
                         //check for walls
