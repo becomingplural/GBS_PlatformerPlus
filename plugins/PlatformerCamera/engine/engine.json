@@ -26,7 +26,7 @@
         [0, "None"]
       ],
       "cType": "UBYTE",
-      "defaultValue": 0
+      "defaultValue": 15
     },
     {
       "key": "plat_camera_lead",
