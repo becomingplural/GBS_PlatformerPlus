@@ -1588,7 +1588,6 @@ void wall_check() BANKED {
 
 void basic_x_col() BANKED {
     actorColX = 0;  //These vars are used to track the offset from solid actors each frame.
-
     UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
     UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;        
     col = 0;
@@ -1603,7 +1602,7 @@ void basic_x_col() BANKED {
             new_x = PLAYER.pos.x;
         } else {
         //If the player is already off the screen, push them back
-            new_x = PLAYER.pos.x - MAX(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 127);
+            new_x = PLAYER.pos.x - MIN(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 127);
         }
     //Same but for left side. This side needs a 1 tile (8px) buffer so it doesn't overflow the variable.
     } else if (new_x < (*edge_left + 8) << 4){
@@ -1614,6 +1613,7 @@ void basic_x_col() BANKED {
         }
     }
 
+    //Step-Check for collisions one tile left or right for each avatar height tile
     if (new_x > PLAYER.pos.x) {
         UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.right) >> 3;
         while (tile_start != tile_end) {
@@ -1627,7 +1627,6 @@ void basic_x_col() BANKED {
             }
             tile_start++;
         }
-        PLAYER.pos.x = new_x;
     } else if (new_x < PLAYER.pos.x) {      
         UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.left) >> 3;
         while (tile_start != tile_end) {
@@ -1641,8 +1640,8 @@ void basic_x_col() BANKED {
             }
             tile_start++;
         }
-        PLAYER.pos.x = new_x;
     }
+    PLAYER.pos.x = new_x;
 }
 
 void basic_y_col(UBYTE drop_press) BANKED {
