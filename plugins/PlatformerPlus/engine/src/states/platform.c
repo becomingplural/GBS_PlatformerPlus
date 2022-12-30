@@ -51,6 +51,8 @@ UPDATE()
 
 For some of the sub-stages, common versions are carved off into seperate functions. 
 
+
+Problem: I think because I'm resetting ActorColY in basic X collision, it's not being intergrated into the Y collision
 */
 #pragma bank 3
 
@@ -178,8 +180,6 @@ WORD deltaX;                //Change in X velocity this frame. Necessary to add 
 WORD deltaY;                //Change in y velocity this frame
 WORD actorColX;             //Offset from colliding with a solid actor in the previous frame from the side
 WORD actorColY;             //As above but for hitting the roof
-WORD edgeLeft;              //Stores either the camera edge or the world edge
-WORD edgeRight;             //Ditto but for the right side
 
 //JUMPING VARIABLES
 WORD jump_reduction_val;    //Holds a temporary jump velocity reduction
@@ -191,6 +191,12 @@ WORD boost_val;
 WORD pl_vel_x;              //Tracks the player's x-velocity between frames
 WORD pl_vel_y;              //Tracks the player's y-velocity between frames
 
+//VARIABLES FOR CAMERAS
+WORD *edge_left;
+WORD *edge_right;
+WORD mod_image_right;
+WORD mod_image_left;
+
 //VARIABLES FOR EVENT PLUGINS
 UBYTE grounded;             //Variable to keep compatability with other plugins that use the older 'grounded' check
 BYTE run_stage;             //Tracks the stage of running based on the run type
@@ -198,6 +204,7 @@ UBYTE jump_type;            //Tracks the type of jumping, from the ground, in th
 
 
 void platform_init() BANKED {
+    //Initialize Camera
     camera_offset_x = 0;
     camera_offset_y = 0;
     camera_deadzone_x = plat_camera_deadzone_x;
@@ -213,7 +220,23 @@ void platform_init() BANKED {
         camera_y = 0;
     }
 
-    edgeRight = (camera_x + SCREEN_WIDTH_HALF-16) << 4;
+    //Initialize Camera Bounds
+    mod_image_right = image_width - SCREEN_WIDTH;
+    mod_image_left = 0;
+    if (plat_camera_block & 1){
+        edge_left = &scroll_x;
+    }
+    else{
+        edge_left = &mod_image_left;
+    }
+
+    if (plat_camera_block & 2){
+        edge_right = &scroll_x;
+    }
+    else{
+        edge_right = &image_width;
+    }
+
     
     //Make sure jumping doesn't overflow variables
     //First, check for jumping based on Frames and Initial Jump Min
@@ -340,6 +363,8 @@ void platform_update() BANKED {
             UBYTE p_half_width = (PLAYER.bounds.right - PLAYER.bounds.left) >> 1;
             UBYTE tile_x_mid = ((PLAYER.pos.x >> 4) + PLAYER.bounds.left + p_half_width) >> 3; 
             pl_vel_y = 0;
+            actorColX = 0;  //These vars are used to track the offset from solid actors each frame. Resetting them here so they can also be used in edge-pushing
+            actorColY = 0;
             if (INPUT_UP) {
                 // Climb laddder
                 UBYTE tile_y = ((PLAYER.pos.y >> 4) + PLAYER.bounds.top + 1) >> 3;
@@ -874,8 +899,9 @@ void platform_update() BANKED {
             //Because the player exits this state if they are moving downwards, we do not need that collision
             deltaY = pl_vel_y >> 8;
             deltaY += actorColY;
+            actorColY = 0;
             deltaY = CLAMP(deltaY,-127,127);    //128 positional units is one tile. Moving further than this breaks the collision detection.
-            temp_y = PLAYER.pos.y;    
+            temp_y = PLAYER.pos.y;
             tile_start = (((PLAYER.pos.x >> 4) + PLAYER.bounds.left)  >> 3);
             tile_end   = (((PLAYER.pos.x >> 4) + PLAYER.bounds.right) >> 3) + 1;
             if (deltaY < 0) {
@@ -1139,6 +1165,7 @@ void platform_update() BANKED {
             //Vertical Collision Checks
             deltaY = pl_vel_y >> 8;
             deltaY += actorColY;
+            actorColY = 0;
             temp_y = PLAYER.pos.y;    
             deltaY = CLAMP(deltaY, -127, 127);
             tile_start = (((PLAYER.pos.x >> 4) + PLAYER.bounds.left)  >> 3);
@@ -1298,7 +1325,7 @@ void actor_check(WORD temp_y) BANKED {
                     actor_attached = TRUE;                        
                     plat_state = GROUND_INIT;
                     //PLAYER bounds top seems to be 0 and counting down...
-                } else if (temp_y + (PLAYER.bounds.top<<4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
+                } else if (temp_y + (PLAYER.bounds.top << 4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
                     actorColY += (hit_actor->pos.y - PLAYER.pos.y) + ((-PLAYER.bounds.top + hit_actor->bounds.bottom)<<4) + 32;
                     pl_vel_y = plat_grav;
                     if(plat_state == JUMP_STATE){
@@ -1560,69 +1587,67 @@ void wall_check() BANKED {
 }
 
 void basic_x_col() BANKED {
-    actorColX = 0;  //These vars are used to track the offset from solid actors each frame. Resetting them here so they can also be used in edge-pushing
-    actorColY = 0;
+    actorColX = 0;  //These vars are used to track the offset from solid actors each frame.
+
     UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
     UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;        
     col = 0;
     deltaX = CLAMP(deltaX, -127, 127);
-    if (deltaX > 0) {
-        UWORD new_x = PLAYER.pos.x + deltaX;
-        //Currently this works for a) running at the moving edge, and b) collision when running left, but breaks collision when c) off the screen moving right:
-        //it immediately pops the the character to the LEFT side of the colliding block...
-        if (new_x < (camera_x + SCREEN_WIDTH_HALF-16) << 4 || !(plat_camera_block & 2)){        
-            UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.right) >> 3;
-            while (tile_start != tile_end) {
-                if (tile_at(tile_x, tile_start) & COLLISION_LEFT) {
-                    new_x = (((tile_x << 3) - PLAYER.bounds.right) << 4) - 1;
-                    pl_vel_x = 0;
-                    col = 1;
-                    last_wall = 1;
-                    wc_val = plat_coyote_max;
-                    break;
-                }
-                tile_start++;
-            }
-            PLAYER.pos.x = new_x;
-        }
-        else {
-            //If off the screen to the right and pressing right
-            actorColX += (((camera_x + SCREEN_WIDTH_HALF - 16) << 4) - PLAYER.pos.x);
-        } 
-    } else if (deltaX < 0) {      
-        WORD new_x = PLAYER.pos.x + deltaX;
-        if ((new_x > (camera_x - SCREEN_WIDTH_HALF) << 4) || !(plat_camera_block & 1)) {
-            UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.left) >> 3;
-            while (tile_start != tile_end) {
-                if (tile_at(tile_x, tile_start) & COLLISION_RIGHT) {
-                    new_x = ((((tile_x + 1) << 3) - PLAYER.bounds.left) << 4) + 1;
-                    pl_vel_x = 0;
-                    col = -1;
-                    last_wall = -1;
-                    wc_val = plat_coyote_max;
-                    break;
-                }
-                tile_start++;
-            }
-            PLAYER.pos.x = MAX(0, new_x);
+    UWORD new_x = PLAYER.pos.x + deltaX;
+
+    //Edge Locking
+    //If the player is past the right edge (camera or screen)
+    if (new_x > (*edge_right + SCREEN_WIDTH - 16) <<4){
+        //If the player is trying to go FURTHER right
+        if (new_x > PLAYER.pos.x){
+            new_x = PLAYER.pos.x;
         } else {
-            //If off the screen to the left and pressing left
-            actorColX += (((camera_x - SCREEN_WIDTH_HALF) << 4) - PLAYER.pos.x);
+        //If the player is already off the screen, push them back
+            new_x = PLAYER.pos.x - MAX(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 127);
         }
-    }
-    //Add simpler check here for camera bounds first...
-    //If off the screen and not pressing anything -> Move towards the screen
-    else if (PLAYER.pos.x < (camera_x - SCREEN_WIDTH_HALF) << 4 && plat_camera_block & 1){
-        actorColX = (((camera_x - SCREEN_WIDTH_HALF) << 4) - PLAYER.pos.x);
-    }
-        else if ((PLAYER.pos.x > (camera_x + SCREEN_WIDTH_HALF-16) << 4) && plat_camera_block & 2)  {
-        actorColX = (((camera_x + SCREEN_WIDTH_HALF - 16) << 4) - PLAYER.pos.x);
+    //Same but for left side. This side needs a 1 tile (8px) buffer so it doesn't overflow the variable.
+    } else if (new_x < (*edge_left + 8) << 4){
+        if (new_x < PLAYER.pos.x){
+            new_x = PLAYER.pos.x;
+        } else {
+            new_x = PLAYER.pos.x + MIN(((*edge_left+8)<<4)-PLAYER.pos.x, 127);
+        }
     }
 
+    if (new_x > PLAYER.pos.x) {
+        UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.right) >> 3;
+        while (tile_start != tile_end) {
+            if (tile_at(tile_x, tile_start) & COLLISION_LEFT) {
+                new_x = (((tile_x << 3) - PLAYER.bounds.right) << 4) - 1;
+                pl_vel_x = 0;
+                col = 1;
+                last_wall = 1;
+                wc_val = plat_coyote_max;
+                break;
+            }
+            tile_start++;
+        }
+        PLAYER.pos.x = new_x;
+    } else if (new_x < PLAYER.pos.x) {      
+        UBYTE tile_x = ((new_x >> 4) + PLAYER.bounds.left) >> 3;
+        while (tile_start != tile_end) {
+            if (tile_at(tile_x, tile_start) & COLLISION_RIGHT) {
+                new_x = ((((tile_x + 1) << 3) - PLAYER.bounds.left) << 4) + 1;
+                pl_vel_x = 0;
+                col = -1;
+                last_wall = -1;
+                wc_val = plat_coyote_max;
+                break;
+            }
+            tile_start++;
+        }
+        PLAYER.pos.x = new_x;
+    }
 }
 
 void basic_y_col(UBYTE drop_press) BANKED {
     UBYTE tile_start, tile_end;
+    actorColY = 0;
     deltaY = CLAMP(deltaY, -127, 127);
     UBYTE tempState = plat_state;
     tile_start = (((PLAYER.pos.x >> 4) + PLAYER.bounds.left)  >> 3);
