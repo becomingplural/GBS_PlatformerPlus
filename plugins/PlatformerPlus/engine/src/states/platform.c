@@ -1602,14 +1602,14 @@ void basic_x_col() BANKED {
             new_x = PLAYER.pos.x;
         } else {
         //If the player is already off the screen, push them back
-            new_x = PLAYER.pos.x - MIN(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 127);
+            new_x = PLAYER.pos.x - MIN(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 16);
         }
     //Same but for left side. This side needs a 1 tile (8px) buffer so it doesn't overflow the variable.
     } else if (new_x < (*edge_left + 8) << 4){
         if (new_x < PLAYER.pos.x){
             new_x = PLAYER.pos.x;
         } else {
-            new_x = PLAYER.pos.x + MIN(((*edge_left+8)<<4)-PLAYER.pos.x, 127);
+            new_x = PLAYER.pos.x + MIN(((*edge_left+8)<<4)-PLAYER.pos.x, 16);
         }
     }
 
