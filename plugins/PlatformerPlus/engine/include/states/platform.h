@@ -25,7 +25,7 @@ extern WORD plat_grav;
 extern WORD plat_hold_grav;
 extern WORD plat_max_fall_vel;
 
-extern UBYTE plat_camera_deadzone_x;
+extern BYTE plat_camera_deadzone_x;
 extern UBYTE plat_camera_block;
 extern UBYTE plat_drop_through;   
 extern UBYTE plat_mp_group;        

@@ -15,6 +15,7 @@ TARGETS for Optimization
 - Is there any way to simplify the number of if branches with the solid actors?
 - It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
 - I think I can probably combine actor_attached and last_actor
+- I need to refactor the downwards collision for Y, it's a bit of a mess at this point. I just can't wrap my head around it atm
 
 THINGS TO WATCH
 - Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
@@ -103,7 +104,7 @@ WORD plat_max_fall_vel;
 
 //PLATFORMER PLUS ENGINE VARIABLES
 //All engine fields are prefixed with plat_
-UBYTE plat_camera_deadzone_x; // Camera deadzone
+BYTE plat_camera_deadzone_x; // Camera deadzone
 UBYTE plat_camera_block;    //Limit the player's movement to the camera's edges
 UBYTE plat_drop_through;    //Drop-through control
 UBYTE plat_mp_group;        //Collision group for platform actors
@@ -327,6 +328,7 @@ void platform_update() BANKED {
     }
 
     //Drop Through Press
+    //I can move this directly into the collision code, and get rid of the variable in the process
     UBYTE drop_press = FALSE;
     switch(plat_drop_through){
         case 1:
@@ -1002,7 +1004,8 @@ void platform_update() BANKED {
                             //If it's a regular tile, do not drop through
                             while (tile_start != tile_end) {
                                 if (tile_at(tile_start, tile_y) & COLLISION_BOTTOM){
-                                    break;
+                                    //Escape two levels of looping.
+                                    goto land;
                                 }
                             tile_start++;
                             }
@@ -1010,17 +1013,19 @@ void platform_update() BANKED {
                             pl_vel_y += plat_grav;
                             break; 
                         }
-
                         //Land on Floor
+                        land:
                         new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
                         actor_attached = FALSE; //Detach when MP moves through a solid tile.
                         if(que_state != GROUND_STATE){que_state = GROUND_INIT;}
                         pl_vel_y = 0;
-                        break;
+                        goto exit;
                     }
                     tile_start++;
                 }
+                if(plat_state == GROUND_STATE && !actor_attached){que_state = FALL_INIT;}
             }
+            exit:
             PLAYER.pos.y = new_y;
 
         } else if (deltaY < 0) {
@@ -1370,7 +1375,11 @@ void platform_update() BANKED {
 
     gotoCounters:
     //COUNTERS===============================================================
-
+            // Counting down the drop-through floor frames
+           // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
+            if (nocollide != 0){
+                nocollide -= 1;
+            }
 
     // Counting down until dashing is ready again
     // XX Set in dash Init and checked in wall, fall, ground, and jump states

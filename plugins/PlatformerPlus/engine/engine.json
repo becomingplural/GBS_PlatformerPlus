@@ -7,7 +7,7 @@
       "label": "Camera Deadzone X",
       "group": "Platformer Plus Level Controls",
       "type": "slider",
-      "cType": "UBYTE",
+      "cType": "BYTE",
       "defaultValue": 4,
       "min": 0,
       "max": 32
