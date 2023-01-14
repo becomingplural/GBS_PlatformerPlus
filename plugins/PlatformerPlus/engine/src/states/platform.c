@@ -327,28 +327,6 @@ void platform_update() BANKED {
         break;
     }
 
-    //Drop Through Press
-    //I can move this directly into the collision code, and get rid of the variable in the process
-    UBYTE drop_press = FALSE;
-    switch(plat_drop_through){
-        case 1:
-        if(INPUT_DOWN){
-            drop_press = TRUE;
-        }
-        break;
-        case 2:
-        if (INPUT_PRESSED(INPUT_DOWN)){
-            drop_press = TRUE;
-        }
-        break;
-        case 3:
-        if (INPUT_DOWN && INPUT_PLATFORM_JUMP){
-            drop_press = TRUE;
-        }
-        break;
-    }
- 
-
     // B. STATE MACHINE==================================================================================================
     // SWITCH for Inits, Horizontal motion, Vertical Motion
     plat_state = que_state;
@@ -598,10 +576,12 @@ void platform_update() BANKED {
                 //Normal gravity
                 pl_vel_y += plat_grav;
                 temp_y = PLAYER.pos.y;
+                que_state = FALL_INIT; //Use this to test for Falling, avoids an If test in YCollision
             }
 
             // Add Collision Offset from Moving Platforms
             deltaY += pl_vel_y >> 8;
+
         }
         break;
     //================================================================================================================
@@ -756,7 +736,6 @@ void platform_update() BANKED {
             temp_y = PLAYER.pos.y;    
 
             nocollide = 0;
-            drop_press = false;
         }
         goto gotoXCol;
     //================================================================================================================
@@ -903,7 +882,7 @@ void platform_update() BANKED {
     } else{
         //DECELERATION
         if (pl_vel_x < 0) {
-            if (que_state == GROUND_STATE){
+            if (plat_state == GROUND_STATE){
                 pl_vel_x += plat_dec;
             } else { 
                 pl_vel_x += plat_air_dec;
@@ -912,7 +891,7 @@ void platform_update() BANKED {
                 pl_vel_x = 0;
             }
         } else if (pl_vel_x > 0) {
-            if (que_state == GROUND_STATE){
+            if (plat_state == GROUND_STATE){
                 pl_vel_x -= plat_dec;
                 }
             else { 
@@ -1000,7 +979,7 @@ void platform_update() BANKED {
                 while (tile_start != tile_end) {
                     if (tile_at(tile_start, tile_y) & COLLISION_TOP) {
                         //Drop-Through Floor Check 
-                        if (drop_press == TRUE){
+                        if (drop_press()){
                             //If it's a regular tile, do not drop through
                             while (tile_start != tile_end) {
                                 if (tile_at(tile_start, tile_y) & COLLISION_BOTTOM){
@@ -1017,15 +996,14 @@ void platform_update() BANKED {
                         land:
                         new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
                         actor_attached = FALSE; //Detach when MP moves through a solid tile.
-                        if(que_state != GROUND_STATE){que_state = GROUND_INIT;}
+                        if(plat_state == GROUND_STATE){que_state = GROUND_STATE;}
+                        else {que_state = GROUND_INIT;}
                         pl_vel_y = 0;
-                        goto exit;
+                        break;
                     }
                     tile_start++;
                 }
-                if(plat_state == GROUND_STATE && !actor_attached){que_state = FALL_INIT;}
             }
-            exit:
             PLAYER.pos.y = new_y;
 
         } else if (deltaY < 0) {
@@ -1586,4 +1564,25 @@ void dash_init_switch() BANKED{
     run_stage = 0;
     que_state = DASH_STATE;
 
+}
+
+UBYTE drop_press() BANKED{
+    switch(plat_drop_through){
+        case 1:
+        if(INPUT_DOWN){
+            return 1;
+        }
+        return 0;
+        case 2:
+        if (INPUT_PRESSED(INPUT_DOWN)){
+            return 1;
+        }
+        return 0;
+        case 3:
+        if (INPUT_DOWN && INPUT_PLATFORM_JUMP){
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
 }

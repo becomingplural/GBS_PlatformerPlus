@@ -10,6 +10,7 @@ void wall_check() BANKED;
 void ladder_check() BANKED;
 void ladder_switch() BANKED;
 void dash_init_switch() BANKED;
+UBYTE drop_press() BANKED;
 
 extern WORD pl_vel_x;
 extern WORD pl_vel_y;
