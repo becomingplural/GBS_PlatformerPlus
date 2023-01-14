@@ -14,7 +14,7 @@ const fields = [
       ["jump_type", "Current jump type (0: none, 1: ground, 2: double, 3: wall, 4: floating)"],
       ["ct_val", "Frames of coyote time left"],
       ["dash_interrupt", "Checks if Dashing is Frozen (true false)"],
-      ["player_angle", "Direction to player (EXPERIMENT)"],
+      ["que_state", "The player's upcoming state in the next frame. "]
     ],
   },
   {
@@ -33,7 +33,7 @@ const compile = (input, helpers) => {
     jump_type: "UINT8",
     dash_interrupt: "UINT8",
     ct_val: "UINT8",
-    player_angle: "UINT8",
+    que_state: "UINT8"
   };
 
   const fieldName = `_${input.field}`;
