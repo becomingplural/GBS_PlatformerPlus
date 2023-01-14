@@ -1,6 +1,6 @@
 # GBS_PlatformerPlus
 Platformer+ Plugin for GBStudio
-Version 1.44
+Version 1.6Beta
 
 Plugins:
 PlatformerPlus          - The Central Plugin, does most of the stuff, edits Platform.c and Platform.h
