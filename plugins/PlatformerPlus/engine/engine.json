@@ -38,7 +38,7 @@
         [3, "Down and Jump"]
       ],
       "cType": "UBYTE",
-      "defaultValue": 1
+      "defaultValue": 0
     },
     {
       "key": "plat_mp_group",
@@ -74,7 +74,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 8192,
+      "defaultValue": 0,
       "min": 0,
       "max": 16384
     },  
@@ -84,7 +84,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "UBYTE",
-      "defaultValue": 6,
+      "defaultValue": 1,
       "min": 1,
       "max": 100
     },   
@@ -114,7 +114,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "UBYTE",
-      "defaultValue": 6,
+      "defaultValue": 0,
       "min": 0,
       "max": 10
     },
@@ -124,7 +124,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "UBYTE",
-      "defaultValue": 6,
+      "defaultValue": 0,
       "min": 0,
       "max": 20
     },  
@@ -166,7 +166,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 1792,
+      "defaultValue": 0,
       "min": 0,
       "max": 8192
     }, 
@@ -189,7 +189,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 3000,
+      "defaultValue": 1792,
       "min": 0,
       "max": 8192
     },   
@@ -215,7 +215,7 @@
         [1, "Enable"]
       ],
       "cType": "UBYTE",
-      "defaultValue": 1
+      "defaultValue": 0
     },
     {
       "key": "plat_air_dec",
@@ -234,7 +234,7 @@
       "type": "select",
       "options": [
         [0, "No Running"],
-        [1, "Default Smooth Acceleration"],
+        [1, "GBS Default (Smooth Acceleration)"],
         [2, "Enhanced Smooth Acceleration"],
         [3, "Immediate Run Speed"],
         [4, "Two Run Speed Levels"],
@@ -249,7 +249,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 0,
+      "defaultValue": 152,
       "min": 0,
       "max": 768
     }, 

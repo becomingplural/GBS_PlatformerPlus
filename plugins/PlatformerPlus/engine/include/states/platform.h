@@ -5,15 +5,11 @@
 
 void platform_init();
 void platform_update();
-void trigger_check() BANKED;
-void actor_check(WORD temp_y) BANKED;
-void acceleration(BYTE dir) BANKED;
-void deceleration() BANKED;
 void basic_anim() BANKED;
-void ladder_check() BANKED;
 void wall_check() BANKED;
-void basic_x_col() BANKED;
-void basic_y_col(UBYTE drop_press) BANKED;
+void ladder_check() BANKED;
+void ladder_switch() BANKED;
+void dash_init_switch() BANKED;
 
 extern WORD pl_vel_x;
 extern WORD pl_vel_y;
