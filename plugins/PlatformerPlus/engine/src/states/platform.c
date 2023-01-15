@@ -18,9 +18,6 @@ TARGETS for Optimization
 - I need to refactor the downwards collision for Y, it's a bit of a mess at this point. I just can't wrap my head around it atm
 
 THINGS TO WATCH
-- Note, the way I've written the cascading state switch logic, if a player hits jump, they will not do a ladder check the same frame. That seems fine, but keep an eye on it.
-- I recently made it so that solid actors only reset the player's velocity if they aren't pressing a direction. Keep an eye on this.
-- Can I dash past camera bounds?
 - Does every state (that needs to) end up resetting DeltaX?
 
 NOTES on GBStudio Quirks
@@ -52,12 +49,14 @@ UPDATE()
     D. STATE MACHINE 2 SWITCH:      gotoSwitch2
         Animation
         State Change Logic
+        Some Counters
     E. Trigger Check                gotoActorCol
     F. Actor Collision Check        gotoTriggerCol
     G. Tic Counters                 gotoCounters
 
 
 BUGS:
+ - When the player is on a moving platform and is hit by another one, they get caught mid-way on the next one.
 */
 #pragma bank 3
 
@@ -920,6 +919,7 @@ void platform_update() BANKED {
             //If the player is trying to go FURTHER right
             if (new_x > PLAYER.pos.x){
                 new_x = PLAYER.pos.x;
+                pl_vel_x = 0;
             } else {
             //If the player is already off the screen, push them back
                 new_x = PLAYER.pos.x - MIN(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 16);
@@ -928,6 +928,7 @@ void platform_update() BANKED {
         } else if (new_x < (*edge_left + 8) << 4){
             if (new_x < PLAYER.pos.x){
                 new_x = PLAYER.pos.x;
+                pl_vel_x = 0;
             } else {
                 new_x = PLAYER.pos.x + MIN(((*edge_left+8)<<4)-PLAYER.pos.x, 16);
             }
@@ -1294,7 +1295,8 @@ void platform_update() BANKED {
                     } else if (temp_y + (PLAYER.bounds.top << 4) > hit_actor->pos.y + (hit_actor->bounds.bottom<<4)){
                         deltaY += (hit_actor->pos.y - PLAYER.pos.y) + ((-PLAYER.bounds.top + hit_actor->bounds.bottom)<<4) + 32;
                         pl_vel_y = plat_grav;
-                        if(que_state == JUMP_STATE){
+
+                        if(que_state == JUMP_STATE || actor_attached){
                             que_state = FALL_INIT;
                         }
 
@@ -1315,6 +1317,7 @@ void platform_update() BANKED {
                             que_state = FALL_INIT;
                         }
                     }
+
                 }
             } else if (hit_actor->collision_group == plat_mp_group){
                 //Platform Actors
