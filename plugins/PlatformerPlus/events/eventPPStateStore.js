@@ -15,32 +15,14 @@ const fields = [
     key: "field",
     defaultValue: "plat_state",
   },
-  {
-    label: "0 = Started Falling, 1 = Falling",
-  },
-  {
-    label: "2 = Started Landing, 3 = On the Ground", 
-  },
-
-  {
-    label: "4 = Started Jumping, 5 = Jumping",
-  },
-
-  {
-    label: "6 = Started Dashing, 7 = Dashing",
-  },
-  {
-    label: "8 = Started Climbing, 9 = On a Ladder",
-  },
-  {
-    label: "10 = Started Sliding, 11 = On a Wall",
-  },
-  {
-    label: "12 = Started Knockback, 13 = Knockback",
-  },
-  {
-    label: "14 = Started Blank, 15 = Blank",
-  },
+  {    label: "0 = Started Falling, 1 = Falling", },
+  {    label: "2 = Started Landing, 3 = On the Ground", },
+  {    label: "4 = Started Jumping, 5 = Jumping", },
+  {    label: "6 = Started Dashing, 7 = Dashing", },
+  {    label: "8 = Started Climbing, 9 = On a Ladder", },
+  {    label: "10 = Started Sliding, 11 = On a Wall", },
+  {    label: "12 = Started Knockback, 13 = Knockback", },
+  {    label: "14 = Started Blank, 15 = Blank", },
 ];
 
 const compile = (input, helpers) => {

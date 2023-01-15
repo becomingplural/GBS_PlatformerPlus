@@ -21,7 +21,7 @@ const fields = [
       },
   {
     key: "field",
-    defaultValue: "plat_state",
+    defaultValue: "que_state",
   },
 ];
 

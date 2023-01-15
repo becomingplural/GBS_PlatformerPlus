@@ -14,7 +14,7 @@ const fields = [
       ["jump_type", "Current jump type (0: none, 1: ground, 2: double, 3: wall, 4: floating)"],
       ["ct_val", "Frames of coyote time left"],
       ["dash_interrupt", "Checks if Dashing is Frozen (true false)"],
-      ["que_state", "The player's upcoming state in the next frame. "]
+      ["que_state", "The player's upcoming state. "]
     ],
   },
   {
