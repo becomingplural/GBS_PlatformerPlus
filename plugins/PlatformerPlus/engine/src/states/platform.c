@@ -907,7 +907,7 @@ void platform_update() BANKED {
     //FUNCTION X COLLISION
     gotoXCol:
     {
-        col = 0;
+
         deltaX = CLAMP(deltaX, -127, 127);
         UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
         UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;       
@@ -1273,6 +1273,7 @@ void platform_update() BANKED {
     //Actor Collisions
     gotoActorCol:
     {
+        col = 0;
         deltaX = 0;
         deltaY = 0;
         actor_t *hit_actor;
@@ -1302,6 +1303,7 @@ void platform_update() BANKED {
 
                     } else if (PLAYER.pos.x < hit_actor->pos.x){
                         deltaX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
+                        col = 1;
                         if(!INPUT_RIGHT){
                             pl_vel_x = 0;
                         }
@@ -1310,6 +1312,7 @@ void platform_update() BANKED {
                         }
                     } else if (PLAYER.pos.x > hit_actor->pos.x){
                         deltaX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
+                        col = -1;
                         if (!INPUT_LEFT){
                             pl_vel_x = 0;
                         }
@@ -1356,12 +1359,6 @@ void platform_update() BANKED {
 
     gotoCounters:
     //COUNTERS===============================================================
-            // Counting down the drop-through floor frames
-           // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
-            if (nocollide != 0){
-                nocollide -= 1;
-            }
-
     // Counting down until dashing is ready again
     // XX Set in dash Init and checked in wall, fall, ground, and jump states
     if (dash_ready_val != 0){
@@ -1406,7 +1403,7 @@ void basic_anim() BANKED{
 
 void wall_check() BANKED {
     if(col != 0 && pl_vel_y >= 0 && plat_wall_slide){
-        if (que_state != WALL_STATE){
+        if (que_state != WALL_STATE ){
             que_state = WALL_INIT;
         }
     } else if (que_state == WALL_STATE){
