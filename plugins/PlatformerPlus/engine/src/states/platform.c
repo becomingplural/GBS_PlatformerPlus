@@ -997,7 +997,7 @@ void platform_update() BANKED {
                         land:
                         new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
                         actor_attached = FALSE; //Detach when MP moves through a solid tile.
-                        if(plat_state == GROUND_STATE){que_state = GROUND_STATE;}
+                        if(plat_state == GROUND_STATE || plat_state == GROUND_INIT){que_state = GROUND_STATE;}
                         else {que_state = GROUND_INIT;}
                         pl_vel_y = 0;
                         break;

@@ -166,7 +166,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 0,
+      "defaultValue": 600,
       "min": 0,
       "max": 8192
     }, 
@@ -189,7 +189,7 @@
       "group": "Platformer Plus",
       "type": "slider",
       "cType": "WORD",
-      "defaultValue": 1792,
+      "defaultValue": 912,
       "min": 0,
       "max": 8192
     },   
@@ -215,7 +215,7 @@
         [1, "Enable"]
       ],
       "cType": "UBYTE",
-      "defaultValue": 0
+      "defaultValue": 1
     },
     {
       "key": "plat_air_dec",
@@ -251,7 +251,7 @@
       "cType": "WORD",
       "defaultValue": 152,
       "min": 0,
-      "max": 768
+      "max": 2304
     }, 
     {
       "key": "plat_run_boost",
