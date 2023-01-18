@@ -544,11 +544,11 @@ void platform_update() BANKED {
                     que_state = FALL_INIT;
                     actor_attached = FALSE;
                 //If the player is off the platform to the right, detach from the platform
-                } else if (PLAYER.pos.x + (PLAYER.bounds.left << 4) > last_actor->pos.x + (last_actor->bounds.right<< 4)) {
+                } else if (PLAYER.pos.x + (PLAYER.bounds.left << 4) > last_actor->pos.x + 16 + (last_actor->bounds.right<< 4)) {
                     que_state = FALL_INIT;
                     actor_attached = FALSE;
                 //If the player is off the platform to the left, detach
-                } else if (PLAYER.pos.x + (PLAYER.bounds.right << 4) < last_actor->pos.x + (last_actor->bounds.left << 4)){
+                } else if (PLAYER.pos.x + 16 + (PLAYER.bounds.right << 4) < last_actor->pos.x + (last_actor->bounds.left << 4)){
                     que_state = FALL_INIT;
                     actor_attached = FALSE;
                 } else{
@@ -621,13 +621,15 @@ void platform_update() BANKED {
                 hold_jump_val -=1;
             } else if (INPUT_PLATFORM_JUMP && pl_vel_y < 0){
                 //After the jump frames end, use the reduced gravity
-                ct_val = 0; //Coyote time gets reset here, rather than immediately, so that dash-jumping works properly
                 pl_vel_y += plat_hold_grav;
-            } else {
-                //Shift out of jumping if the player stops pressing OR if they run out of jump frames
-                ct_val = 0;
+            } else if (pl_vel_y >= 0){
                 que_state = FALL_INIT;
+                pl_vel_y += plat_grav;
+            } else {
+                pl_vel_y += plat_grav;
             }
+
+
 
             temp_y = PLAYER.pos.y;
             //Start DeltaX with Actor offsets
