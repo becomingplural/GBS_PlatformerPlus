@@ -913,7 +913,7 @@ void platform_update() BANKED {
         deltaX = CLAMP(deltaX, -127, 127);
         UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
         UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;       
-        UWORD new_x = PLAYER.pos.x + deltaX;
+        WORD new_x = PLAYER.pos.x + deltaX;
         
         //Edge Locking
         //If the player is past the right edge (camera or screen)
@@ -927,8 +927,8 @@ void platform_update() BANKED {
                 new_x = PLAYER.pos.x - MIN(PLAYER.pos.x - ((*edge_right + SCREEN_WIDTH - 16)<<4), 16);
             }
         //Same but for left side. This side needs a 1 tile (8px) buffer so it doesn't overflow the variable.
-        } else if (new_x < (*edge_left + 8) << 4){
-            if (new_x < PLAYER.pos.x){
+        } else if (new_x < *edge_left << 4){
+            if (deltaX < 0){
                 new_x = PLAYER.pos.x;
                 pl_vel_x = 0;
             } else {
