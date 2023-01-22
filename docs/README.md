@@ -16,7 +16,7 @@ Thanks for all your support, and please drop me a line when you make something w
 
 ## Platformer Plus Level Settings
 
-Platformer+ includes several options for changing how game elements operate. Some of these have been pulled out into two other complementary plugins, PlatformerCamera and PlatformerPlusGravity. These are designed to work with Platformer+, but can also be removed if you don’t need them. These settings have been organized into a separate settings window to make them easier to adjust.
+Platformer+ includes several options for changing how game elements operate. Some of these have been pulled out into two other complementary plugins, **PlatformerCamera** and **PlatformerPlusGravity**. These are designed to work with Platformer+, but can also be removed if you don’t need them. These settings have been organized into a separate settings window to make them easier to adjust.
 
 ![image](https://user-images.githubusercontent.com/51967950/213941314-9e473412-b2f1-4006-a916-81cb98595103.png)
 
@@ -28,15 +28,19 @@ Allows you to specify thedirections that the camera will track the player. Note:
 
 This uses the player’s velocityto move the camera slightly further ahead in the direction of travel. The higher the number the further ahead the camera will move. If you use forward focus, I recommend turning the camera catch-up speed (below) to 3 or more so that the transition is smooth.
 
-- 0 No forward focus
-- 1-48 Multiplier of player velocity
+| Value | Effect |
+| --- | --- |
+| 0 |  No forward focus |
+| 1-48 |  Multiplier of player velocity |
 
 ### Camera Catch-Up Speed 
 
 This allows the camera to followthe player with a slight delay. The camera will move towards the player faster when they are further away and slower as it gets close.
 
-- 0 Instantly follows the player
-- 1-6 The current distance is divided by this power of 2.
+| Value | Effect |
+| --- | --- |
+| 0 | Instantly follows the player |
+| 1-6 | The current distance is divided by this power of 2. |
 
 ### Camera Deadzone X 
 
@@ -50,17 +54,21 @@ Allows you to constrainthe player to the camera’s current edge. This is design
 
 This allows the player to drop through collision tiles that are set to collide only from the top. The options controls what button causes the drop to happen.
 
-- _Off_ Disables drop-through.
-- _Down (hold)_ Holding down drops through any top-collision tiles.
-- _Down (tap)_ Pressing down drops through a singleplatform.
-- _Jump and Down_ Pressing these two keys togetherdrops through.
+| Value | Effect |
+| --- | --- |
+| Off | Disables drop-through. |
+| Down (hold) | Holding down drops through any top-collision tiles. |
+| Down (tap) | Pressing down drops through a singleplatform. |
+| Jump and Down | Pressing these two keys togetherdrops through. |
 
 ### PlatformActorCollisionGroup 
 
 This option allows you to make actors into platforms while maintaining the full functionality of actors (they can move, and run on_hit events). These are actors that you set to a specific collision group, and then specify that collision group here. The plugin will attach the player to the top of any actor in that group, when the player descends from above. No other directions are affected. Controlling the actual movement of the platforms, disabling them, or any other actions are all handed through scripting.
 
-- _None (default)_: Disables platform actors.
-- _Collision Group X_ Enables, and sets the collision group for moving platforms
+| Value | Effect |
+| --- | --- |
+| None (default) | Disables platform actors. |
+| Collision Group X | Enables, and sets the collision group for moving platforms |
 
 ### Solid Actor Collision Group 
 
@@ -78,6 +86,7 @@ player is holding the jump button (but not, for instance, while falling after a 
 To understand jumping in Platformer+, we need to take a look at how these four elements all fit together.
 
 In the original GBS platformer engine, Jump Velocity adds a certain amount of upward force to the player at the moment they press the jump button. Gravity while jumping applies a different amount of downward force throughout the upward part of the jump, as long as the player is holding the jump button. This gives the player some control over the height of the jump (as long as the gravity is set to a lower number than regular gravity. To visualize this difference we can graph the player’s height over time like this:
+
 ![image](https://user-images.githubusercontent.com/51967950/213940861-dde55bb5-f91f-42bd-a627-82139071d0b8.png)
 ![image](https://user-images.githubusercontent.com/51967950/213940882-42077010-abe5-4b56-9bf5-f619ca2979da.png)
 
@@ -94,27 +103,25 @@ That extra control is good, but we can do better! Steve Swink, in his book Game 
 ### Extra Jumps
 
 This setting allows the player to jumpa second time in mid-air. That second jump uses the same dynamics as the ground jump. You can give the player more than one extra jump by setting the number higher. The counter resets every time the player touches the ground.
-- 0 Disable air-jumping
-- 1-254 Sets the number of jumps the player can perform consecutively
-- 255 Infinite jumps
+
+| Value | Effect |
+| --- | --- |
+| 0 | Disable air-jumping |
+| 1-254 | Sets the number of jumps the player can perform consecutively |
+| 255 | Infinite jumps |
 
 ### Height Reduction on Subsequent Jumps
 
-This reducesthe overall jump power of each
-consecutive air-jump. This is the effect of multi-jump in Kirby games, for instance. The
-numbers need to be relatively high (~4000) to be noticeable. This option only takes
-effect if the Extra Jumps setting is on.
+This reducesthe overall jump power of each consecutive air-jump. This is the effect of multi-jump in Kirby games, for instance. The numbers need to be relatively high (~4000) to be noticeable. This option only takes effect if the Extra Jumps setting is on.
 
 ### Coyote Time
 
-A common problem in platforming gamesis that the player presses the
-jump button just after the character has left a ledge. Because the character isn’t
-touching the ground, the default GBS Platform Engine won’t allow them to jump. Coyote
-time is a simple counter that keeps track of how long ago the player last touched the
-ground, and if it was recently enough it allows the player to jump even though they are
-in mid-air. This variable is measured in frames.
-0 No coyote time.
-1-10 Number of frames to allow jumping after being on a platform.
+A common problem in platforming gamesis that the player presses the jump button just after the character has left a ledge. Because the character isn’t touching the ground, the default GBS Platform Engine won’t allow them to jump. Coyote time is a simple counter that keeps track of how long ago the player last touched the ground, and if it was recently enough it allows the player to jump even though they are in mid-air. This variable is measured in frames.
+
+| Value | Effect |
+| --- | --- |
+| 0 | No coyote time. |
+| 1-10 | Number of frames to allow jumping after being on a platform. |
 
 ### Jump Buffer
 
@@ -123,8 +130,10 @@ too soon, right before they land. Again, the GBS engine treats this as the playe
 being in the air. The jump buffer keeps track of how long ago the jump button was
 pressed, and if the player lands soon afterwards then it automatically triggers a jump.
 
-- 0 No jump buffer.
-- 1-20 Number of frames to buffer the jump button for.
+| Value | Effect |
+| --- | --- |
+| 0 | No jump buffer. |
+| 1-20 | Number of frames to buffer the jump button for. |
 
 ### Wall Jumps
 
@@ -135,8 +144,10 @@ wall-slide, it becomes much easier, and the player gets a wall-jump buffer like 
 regular jump buffer. The variable is the number of consecutive wall jumps the player
 can perform before touching the floor again.
 
-- 0 Disable wall-jumping
-- 1-255 Sets the number of consecutive wall jumps.
+| Value | Effect |
+| --- | --- |
+| 0 | Disable wall-jumping |
+| 1-255 | Sets the number of consecutive wall jumps. |
 
 ### Enable Wall Slide
 
@@ -145,16 +156,21 @@ speed is set below with the wall-slide gravity. Turning this on also changes the
 player interacts with a wall, so that it change the direction the player is facing to show a
 different animation, and can help with dashing in the correct direction.
 
-- Off Disables wall-sliding
-- On Enables wall-sliding
+| Value | Effect |
+| --- | --- |
+| Off | Disables wall-sliding |
+| On | Enables wall-sliding |
 
 ### Wall Slide Gravity
 
 Controls the speed at which thecharacter descends while attached
 to a wall. The player will descend at a constant rate (whereas normal gravity is
 cumulative).
-- 0 Stick to the wall
-- >0 Slowly slide down the wall while pressing into it.
+
+| Value | Effect |
+| --- | --- |
+| 0 | Stick to the wall |
+| >0 | Slowly slide down the wall while pressing into it. |
 
 ### Wall Kick Off
 
