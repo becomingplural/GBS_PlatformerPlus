@@ -14,6 +14,8 @@ Thanks for all your support, and please drop me a line when you make something w
 - [Engine Field Events with Platformer Plus](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#engine-field-events-with-platformer-plus)
 - [Platformer+ Player Fields](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#platformer-player-fields)
 
+--- 
+
 ## Platformer Plus Level Settings
 
 Platformer+ includes several options for changing how game elements operate. Some of these have been pulled out into two other complementary plugins, **PlatformerCamera** and **PlatformerPlusGravity**. These are designed to work with Platformer+, but can also be removed if you don’t need them. These settings have been organized into a separate settings window to make them easier to adjust.
@@ -74,12 +76,11 @@ This option allows you to make actors into platforms while maintaining the full 
 
 This option transforms an actor into a solid object that the player cannot pass through. The actor can move, push the player, and will run collision scripts. The solidity applies to all directions, so the player can land on the actor or bump their head while jumping. Currently the wall slide ability does not work with actors however. To enable this setting, specify the collision group of the actors that you want to be solid.
 
+---
+
 ## Jumping
 
-The options in jumping are interconnected with many of the default options from the platformer engine to ensure compatibility.Unfortunately that means you’ll have to move between the two panels. Most of these options are subtle tweaks that change the ‘game-feel’
-of a jump. The Platformer+ event plugin allows you to track whether the player is grounded or
-is currently jumping. The jump state lasts for the number of jump frames you have set while the
-player is holding the jump button (but not, for instance, while falling after a jump).
+The options in jumping are interconnected with many of the default options from the platformer engine to ensure compatibility.Unfortunately that means you’ll have to move between the two panels. Most of these options are subtle tweaks that change the ‘game-feel’ of a jump. The Platformer+ event plugin allows you to track whether the player is grounded or is currently jumping. The jump state lasts for the number of jump frames you have set while the player is holding the jump button (but not, for instance, while falling after a jump).
 
 ### Minimum Jump Height + Jump Frames + Jump Velocity + Gravity While Jumping
 
@@ -125,10 +126,7 @@ A common problem in platforming gamesis that the player presses the jump button 
 
 ### Jump Buffer
 
-The flips side of coyote time. Sometimesa player will hit the jump button
-too soon, right before they land. Again, the GBS engine treats this as the player still
-being in the air. The jump buffer keeps track of how long ago the jump button was
-pressed, and if the player lands soon afterwards then it automatically triggers a jump.
+The flips side of coyote time. Sometimesa player will hit the jump button too soon, right before they land. Again, the GBS engine treats this as the player still being in the air. The jump buffer keeps track of how long ago the jump button was pressed, and if the player lands soon afterwards then it automatically triggers a jump.
 
 | Value | Effect |
 | --- | --- |
@@ -137,12 +135,7 @@ pressed, and if the player lands soon afterwards then it automatically triggers 
 
 ### Wall Jumps
 
-This allows the player to jump when theyare pressed up against the wall.
-For this to trigger, the player must be directly against the wall and pushing into it when
-they hit jump. By itself, this can be a little tricky to get the timing right. By enabling
-wall-slide, it becomes much easier, and the player gets a wall-jump buffer like the
-regular jump buffer. The variable is the number of consecutive wall jumps the player
-can perform before touching the floor again.
+This allows the player to jump when they are pressed up against the wall. For this to trigger, the player must be directly against the wall and pushing into it when they hit jump. By itself, this can be a little tricky to get the timing right. By enabling wall-slide, it becomes much easier, and the player gets a wall-jump buffer like the regular jump buffer. The variable is the number of consecutive wall jumps the player can perform before touching the floor again.
 
 | Value | Effect |
 | --- | --- |
@@ -151,10 +144,7 @@ can perform before touching the floor again.
 
 ### Enable Wall Slide
 
-This is a simple toggle that turnson or off the wall slide ability. The
-speed is set below with the wall-slide gravity. Turning this on also changes the way a
-player interacts with a wall, so that it change the direction the player is facing to show a
-different animation, and can help with dashing in the correct direction.
+This is a simple toggle that turnson or off the wall slide ability. The speed is set below with the wall-slide gravity. Turning this on also changes the way a player interacts with a wall, so that it change the direction the player is facing to show a different animation, and can help with dashing in the correct direction.
 
 | Value | Effect |
 | --- | --- |
@@ -163,9 +153,7 @@ different animation, and can help with dashing in the correct direction.
 
 ### Wall Slide Gravity
 
-Controls the speed at which thecharacter descends while attached
-to a wall. The player will descend at a constant rate (whereas normal gravity is
-cumulative).
+Controls the speed at which thecharacter descends while attached to a wall. The player will descend at a constant rate (whereas normal gravity is cumulative).
 
 | Value | Effect |
 | --- | --- |
@@ -192,12 +180,11 @@ This option enables the Float mechanicand determines what key the player uses fo
 
 This variable sets the speed atwhich the float mechanic descends.
 
+---
+
 ## Horizontal Motion
 
-The horizontal motion controls are a bit of a varied category. These options generally change
-how the player accelerates and decelerates to create slightly different feelings while walking
-and running. The Platformer+ event plugin allows you to track when the player is running, and
-what the intensity of that run-state is (from 0-4).
+The horizontal motion controls are a bit of a varied category. These options generally change how the player accelerates and decelerates to create slightly different feelings while walking and running. The Platformer+ event plugin allows you to track when the player is running, and what the intensity of that run-state is (from 0-4).
 
 ### Air Control
 
@@ -212,25 +199,32 @@ By default, GBStudiokeeps your avatar oriented in the direction you were facing 
 By default, the GBS Platform Enginedoes something similar to disabling air control because it doesn’t slow the character down in the air. So if the player doesn’t press left or right, their character will keep the same momentum. Air deceleration adds a bit of friction so that the character will come to a stop unless the player actively presses a button.
 
 ### Run Style  
+
 By default, the GBS run command adds asmall amount of acceleration to the character every frame, smoothing accelerating it from a stand-still to a full run. That is often good, but there are other ways of conceptualizing how running should feel and work. This option allows you to select from additional styles.
 
-- **No Running**: Disables the run ability entirely.
-- **Default Smooth Acceleration:** GBStudio’s standard runmodel
-- **Enhanced Smooth Acceleration:** Uses walk acceleration until the player gets to their full walk speed. Also uses turn acceleration (below).
-- **Immediate Run Speed:** Player instantly acceleratesto full speed.
-- **Two Run Speed Levels:** Keeps track of accelerationbehind the scenes. The player walks at a normal speed until they’ve built up enough acceleration to match their full run speed, at which point it switches over.
-- **Three Run Speed Levels:** As above, but adds a middletier in between walking and running.
+| Value | Effect |
+| --- | --- |
+| **No Running** | Disables the run ability entirely. |
+| **Default Smooth Acceleration** | GBStudio’s standard runmodel |
+| **Enhanced Smooth Acceleration** | Uses walk acceleration until the player gets to their full walk speed. Also uses turn acceleration (below). |
+| **Immediate Run Speed** | Player instantly acceleratesto full speed. |
+| **Two Run Speed Levels** | Keeps track of accelerationbehind the scenes. The player walks at a normal speed until they’ve built up enough acceleration to match their full run speed, at which point it switches over. |
+| **Three Run Speed Levels** | As above, but adds a middletier in between walking and running. |
 
 ### Acceleration when Turning
 
 By default, GBStudio allowsyour character to turn instantly while running at full tilt. Some of the run options above now allow you to keep some of that momentum when the character turns. This option sets the speed with which the player bounces back.
 
-- 0 Disable turn acceleration
+| Value | Effect |
+| --- | --- |
+| 0 | Disable turn acceleration |
 
 ### Jump Boost from Run Speed 
 This option allows youto add more height to a jump based on the speed that the player is moving horizontally. It calculates the height based off the speed, rather than the accumulated acceleration–so the different run speed tiers will give consistent boosts, while the boost from smooth acceleration will vary each frame.
 
 **Note**: the code for this has been re-written in v1.4to offer more dramatic changes in height. You may need to adjust your prior settings.
+
+---
 
 ## Dashing
 
@@ -270,11 +264,15 @@ The time it takes for the dashto cross its total distance. This is measured in f
 
 The time (in frames) before theplayer can dash again after previously using a dash. Currently the dash doesn’t have any recharge setting for touching the ground–so you can air-dash multiple times in a row if the recharge time is low enough. In the future there will probably be an option for resetting the dash when landing.
 
+---
+
 ## Engine Field Events with Platformer Plus
 
 One of the cool things about combining Platformer+ with GBS 3.1 is that we now have events that can change engine fields. That means that you can have power-ups that enable double-jumping, wall-jumping, dashing, or floating. It also means that you can change the gravity or other aspects of the physics on the fly to create slippery zones or shorter jumps.
 
 However, there are a couple of caveats about making changes to some of the jumping and dashing numbers in Platformer+. The amount of jump force applied during each jump frame is calculated when the scene starts, as is the amount of dash distance applied during each frame of dashing. That means that any changes you make to the Jump Velocity, Jump Frames, Dash Distance, or Dash Time, won’t register until you move into the next scene. The initialization phase also has some safety checks to make sure the variables all stay within a valid range–however there are some creative ways to bypass those checks when changing things during gameplay. If your character’s jump ever stops working when you update an engine variable, try dialing back the amount that you’re increasing that variable.
+
+---
 
 ## Platformer+ Player Fields
 
