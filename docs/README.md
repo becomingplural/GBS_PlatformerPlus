@@ -1,6 +1,6 @@
 # A (Rough) Guide to the Platformer+ Settings
 
-Updated for the release of P+ 1.
+Updated for the release of P+ 1.5
 
 The Platformer+ engine plugin for GBStudio has been out for a few months and has gone
 through some pretty drastic expansions and modifications in that time. So I thought I would
@@ -10,22 +10,14 @@ regularly check the GBStudio discord and usually can get a patch together in a d
 Thanks for all your support, and please drop me a line when you make something with P+, I
 always love to see what people create!
 
-**New Settings**
-Platforms
 
-Jumping
-Horizontal Motion
-Dashing
-
-**New Events**
-Engine Field Events with Platformer Plus
-Platformer+ Player Fields
-Store Platformer+ Fields in Variable
-Store Platformer+ State in Variable
-Set Platformer + State
-Enable Actor Gravity
-Disable Actor Gravity
-
+**Table of Contents**
+- Platformer Plus Level Settings
+- Jumping
+- Horizontal Motion
+- Dashing
+- Engine Field Events with Platformer Plus
+- Platformer+ Player Fields
 
 ## Platformer Plus Level Settings
 
@@ -123,6 +115,10 @@ controlovertheheightofthejump(aslongasthegravityissettoalowernumberthan
 regulargravity.Tovisualizethisdifferencewecangraphtheplayer’sheightovertime
 like this:
 ```
+![image](https://user-images.githubusercontent.com/51967950/213940861-dde55bb5-f91f-42bd-a627-82139071d0b8.png)
+![image](https://user-images.githubusercontent.com/51967950/213940882-42077010-abe5-4b56-9bf5-f619ca2979da.png)
+
+
 ```
 Inthefirstgraph,wehaveconsistentgravity;inthesecond,thegravityislessduring
 the upward part–so the player has more time to maneuver, before accelerating quickly.
@@ -140,6 +136,8 @@ extraframesofforce.Wealsokeepthetwokindsofgravity.Thatmeanstherearefour
 phasestothejumpwithdifferentdynamics:thefirstframe,theboostfromthejump
 frames,thetimeafterthejumpframeswhilethelowergravitykicksin,andfinallythe
 descent. It looks something like this:
+
+![image](https://user-images.githubusercontent.com/51967950/213940900-4ad5f34d-4a5d-4e84-92ed-0c3d581123d0.png)
 
 ```
 Note 1 :IfyouwanttoapproximatetheolderstyleGBStudiogravityinthisnewmodel,
