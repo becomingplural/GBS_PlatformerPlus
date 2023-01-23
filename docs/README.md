@@ -26,24 +26,6 @@ Platformer+ includes several options for changing how game elements operate. Som
 
 Allows you to specify thedirections that the camera will track the player. Note: by itself this doesn’t lock the player to the camera’s edge, it is only about the camera’s view. The list of options includes settings for all the possible combinations of edges, though you may have to look.
 
-### Camera Forward Focus 
-
-This uses the player’s velocityto move the camera slightly further ahead in the direction of travel. The higher the number the further ahead the camera will move. If you use forward focus, I recommend turning the camera catch-up speed (below) to 3 or more so that the transition is smooth.
-
-| Value | Effect |
-| --- | --- |
-| 0 |  No forward focus |
-| 1-48 |  Multiplier of player velocity |
-
-### Camera Catch-Up Speed 
-
-This allows the camera to followthe player with a slight delay. The camera will move towards the player faster when they are further away and slower as it gets close.
-
-| Value | Effect |
-| --- | --- |
-| 0 | Instantly follows the player |
-| 1-6 | The current distance is divided by this power of 2. |
-
 ### Camera Deadzone X 
 
 This is a built-in GBStudio variable,but one that normally isn’t exposed. It has a big effect on how a platforming game feels though, so I wanted to make it editable.
