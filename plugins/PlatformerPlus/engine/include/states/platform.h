@@ -12,6 +12,12 @@ void ladder_switch() BANKED;
 void dash_init_switch() BANKED;
 UBYTE drop_press() BANKED;
 
+typedef struct script_state_t {
+    UBYTE script_bank;
+    UBYTE *script_addr;
+} script_state_t;
+
+
 extern WORD pl_vel_x;
 extern WORD pl_vel_y;
 extern WORD plat_min_vel;
@@ -56,6 +62,5 @@ extern UBYTE plat_dash_through;
 extern WORD plat_dash_dist;       
 extern UBYTE plat_dash_frames;
 extern UBYTE plat_dash_ready_max; 
-
 
 #endif

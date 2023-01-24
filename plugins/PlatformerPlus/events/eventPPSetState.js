@@ -3,22 +3,22 @@ const groups = ["Platformer+", "Player Fields"];
 const name = "Set Platformer+ State";
 
 const fields = [
-    {
-        key: "state",
-        label: "Select Player State to Set (this feature is still experimental)",
-        type: "select",
-        defaultValue: "0",
-        options: [
-          ["0", "Falling"],
-          ["2", "Grounded"],
-          ["4", "Jumping"],
-          ["6", "Dashing"],
-          ["8", "On a Ladder"],
-          ["10", "On a Wall"],
-          ["12", "Knockback"],
-          ["14", "Blank"],
-        ],
-      },
+  {
+    key: "state",
+    label: "Select Player State to Set (this feature is still experimental)",
+    type: "select",
+    defaultValue: "0",
+    options: [
+      ["0", "Falling"],
+      ["3", "Grounded"],
+      ["6", "Jumping"],
+      ["9", "Dashing"],
+      ["12", "On a Ladder"],
+      ["15", "On a Wall"],
+      ["18", "Knockback"],
+      ["20", "Blank"],
+    ],
+  },
   {
     key: "field",
     defaultValue: "que_state",
@@ -28,7 +28,7 @@ const fields = [
 const compile = (input, helpers) => {
   const { _addComment, _addNL, _setConstMemInt16, _setMemInt16ToVariable } =
     helpers;
-    _addComment("Set Dash Interrupt to True");
+    _addComment("Set Platformer Plus State");
     _setConstMemInt16(input.field, input.state);
 
   _addNL();

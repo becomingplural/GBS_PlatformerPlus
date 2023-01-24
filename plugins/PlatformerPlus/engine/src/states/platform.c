@@ -12,7 +12,7 @@ Future notes on things to do:
 - Add check for camera bounds on Dash Init
 
 TARGETS for Optimization
-- Is there any way to simplify the number of if branches with the solid actors?
+- I should be able to combine solid actors and platform actors into a single check...
 - It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
 - I think I can probably combine actor_attached and last_actor
 - I need to refactor the downwards collision for Y, it's a bit of a mess at this point. I just can't wrap my head around it atm
@@ -23,13 +23,14 @@ THINGS TO WATCH
 NOTES on GBStudio Quirks
 - 256 velocities per position, 16 'positions' per pixel, 8 pixels per tile
 - Player bounds: for an ordinary 16x16 sprite, bounds.left starts at 0 and bounds.right starts at 16. If it's smaller, bounds.left is POSITIVE
-- For bounds.top, however, Y starts counting from the middle of a sprite. bounds.top is negative and bounds.bottom is positive
-- CameraX is in the middle of the screen
+    For bounds.top, however, Y starts counting from the middle of a sprite. bounds.top is negative and bounds.bottom is positive
+- CameraX is in the middle of the screen, not left corner
 
 GENERAL STRUCTURE OF THIS FILE
 The old format was well structured as a state-machine, isolating all the components into states. Unfortunately, it seems like the overhead of calling 
-functions on the GameBoy makes this model unperformant. However, I'm also limited to the total amount of code that can be placed in a single bank. I cannot get rid of the functions
-and move the code into the file itself.
+collision functions on the GameBoy makes this model unperformant. However, I'm also limited to the total amount of code that can be placed in a single bank. 
+I cannot get rid of the functions and move the code into the file itself. New structure is a compromise that uses goto commands to skip some sections that are
+shared by most of the states. 
     
 INIT()
     Tweak a few fields so they don't overflow variables
@@ -74,6 +75,8 @@ BUGS:
 #include "trigger.h"
 #include "vm.h"
 
+
+
 #ifndef INPUT_PLATFORM_JUMP
 #define INPUT_PLATFORM_JUMP        INPUT_A
 #endif
@@ -86,6 +89,10 @@ BUGS:
 #ifndef PLATFORM_CAMERA_DEADZONE_Y
 #define PLATFORM_CAMERA_DEADZONE_Y 16
 #endif
+
+//TEST
+script_state_t state_events[18];
+
 
 
 //DEFAULT ENGINE VARIABLES
@@ -137,16 +144,22 @@ UBYTE plat_dash_ready_max;  //Time before the player can dash again
 enum pStates {              //Datatype for tracking states
     FALL_INIT = 0,
     FALL_STATE,
+    FALL_END,
     GROUND_INIT,
     GROUND_STATE,
+    GROUND_END,
     JUMP_INIT,
     JUMP_STATE,
+    JUMP_END,
     DASH_INIT,
     DASH_STATE,
+    DASH_END,
     LADDER_INIT,
     LADDER_STATE,
+    LADDER_END,
     WALL_INIT,
     WALL_STATE,
+    WALL_END,
     KNOCKBACK_INIT,
     KNOCKBACK_STATE,
     BLANK_INIT,
@@ -278,11 +291,11 @@ void platform_init() BANKED {
     pl_vel_x = 0;
     pl_vel_y = plat_grav << 2;
     last_wall = 0;                  //This could be 1 bit
-    col = 0;                        //This could be 1 bit
+    col = 0;                        //and potentially combined here
     hold_jump_val = plat_hold_jump_max;
     dj_val = 0;
     wj_val = plat_wall_jump_max;
-    dash_end_clear = FALSE;
+    dash_end_clear = FALSE;         //could also be mixed into the collision bitmask
     jump_type = 0;
     deltaX = 0;
     deltaY = 0;
@@ -327,17 +340,162 @@ void platform_update() BANKED {
     }
 
     // B. STATE MACHINE==================================================================================================
-    // SWITCH for Inits, Horizontal motion, Vertical Motion
+    // SWITCH that includes state initialization, calculation of horizontal motion and vertical Motion
     plat_state = que_state;
     switch(plat_state){
-        case LADDER_INIT:
-            plat_state = LADDER_STATE;
-            que_state = LADDER_STATE;
-            jump_type = 0;
-        case LADDER_STATE:{
-            ladder_switch();
+        case FALL_INIT:
+            que_state = FALL_STATE;
+        case FALL_STATE: {
+            jump_type = 0;  //Keep this here, rather than in init, so that we can easily track float as a jump type
+
+            //Vertical Movement--------------------------------------------------------------------------------------------
+            //FLOAT INPUT
+            if ((plat_float_input == 1 && INPUT_PLATFORM_JUMP) || (plat_float_input == 2 && INPUT_UP)){
+                if (pl_vel_y >= 0){
+                    jump_type = 4;
+                    pl_vel_y = plat_float_grav;
+                }
+            } else if (nocollide != 0){
+                //magic number, rough minimum for actually having the player descend through a platform
+                pl_vel_y = 7000; 
+            } else if (INPUT_PLATFORM_JUMP && pl_vel_y < 0) {
+                //Gravity while holding jump
+                pl_vel_y += plat_hold_grav;
+                pl_vel_y = MIN(pl_vel_y,plat_max_fall_vel);
+            } else {
+                //Normal gravity
+                pl_vel_y += plat_grav;
+                pl_vel_y = MIN(pl_vel_y,plat_max_fall_vel);
+            }
+        
+            //Collision ---------------------------------------------------------------------------------------------------
+            //Vertical Collision Checks
+            deltaY += pl_vel_y >> 8;
+            temp_y = PLAYER.pos.y;    
+
+            //Horizontal Movement----------------------------------------------------------------------------------------
+            if (nocontrol_h != 0 || plat_air_control == 0){
+                //No horizontal input
+                deltaX += pl_vel_x >> 8;
+                goto gotoXCol;
+            } 
         }
-        goto gotoActorCol;
+        break;
+    //================================================================================================================
+        case GROUND_INIT:
+            que_state = GROUND_STATE;
+            jump_type = 0;
+            wc_val = 0;
+            ct_val = plat_coyote_max; 
+            dj_val = plat_extra_jumps; 
+            wj_val = plat_wall_jump_max;
+            jump_reduction_val = 0;
+            
+        case GROUND_STATE:{
+            //Add X & Y motion from moving platforms
+            //Transform velocity into positional data, to keep the precision of the platform's movement
+            if (actor_attached){
+                //If the platform has been disabled, detach the player
+                if(last_actor->disabled == TRUE){
+                    que_state = FALL_INIT;
+                    actor_attached = FALSE;
+                //If the player is off the platform to the right, detach from the platform
+                } else if (PLAYER.pos.x + (PLAYER.bounds.left << 4) > last_actor->pos.x + 16 + (last_actor->bounds.right<< 4)) {
+                    que_state = FALL_INIT;
+                    actor_attached = FALSE;
+                //If the player is off the platform to the left, detach
+                } else if (PLAYER.pos.x + 16 + (PLAYER.bounds.right << 4) < last_actor->pos.x + (last_actor->bounds.left << 4)){
+                    que_state = FALL_INIT;
+                    actor_attached = FALSE;
+                } else{
+                //Otherwise, add any change in movement from platform
+                    deltaX += (last_actor->pos.x - mp_last_x);
+                    mp_last_x = last_actor->pos.x;
+                }
+
+                //If we're on a platform, zero out any other motion from gravity or other sources
+                pl_vel_y = 0;
+                
+                //Add any change from the platform we're standing on
+                deltaY += last_actor->pos.y - mp_last_y;
+
+                //We're setting these to the platform's position, rather than the actor so that if something causes the player to
+                //detach (like hitting the roof), they won't automatically get re-attached in the subsequent actor collision step.
+                mp_last_y = last_actor->pos.y;
+                temp_y = last_actor->pos.y;
+            } else if (nocollide != 0){
+                //If we're dropping through a platform
+                pl_vel_y = 7000; //magic number, rough minimum for actually having the player descend through a platform
+                temp_y = PLAYER.pos.y;
+            } else {
+                //Normal gravity
+                pl_vel_y += plat_grav;
+                temp_y = PLAYER.pos.y;
+                que_state = FALL_INIT; //Use this to test for Falling, avoids an If test in YCollision
+            }
+            // Add Collision Offset from Moving Platforms
+            deltaY += pl_vel_y >> 8;
+
+        }
+        break;
+    //================================================================================================================
+        case JUMP_INIT:
+            //Right now this has a limited use for triggered jumps because many of the jump effects depend on testing INPUT_PLATFORM_JUMP
+            //But if the player switches to this state without pressing jump, then these won't fire...
+            hold_jump_val = plat_hold_jump_max; 
+            actor_attached = FALSE;
+            pl_vel_y = -plat_jump_min;
+            jb_val = 0;
+            ct_val = 0;
+            wc_val = 0;
+            que_state = JUMP_STATE;
+        case JUMP_STATE: {
+            //Vertical Movement-------------------------------------------------------------------------------------------
+            //Add jump force during each jump frame
+            if (hold_jump_val !=0 && INPUT_PLATFORM_JUMP){
+                //Add the boost per frame amount.
+                pl_vel_y -= jump_per_frame;
+                //Reduce subsequent jump amounts (for double jumps)
+                if (plat_jump_vel >= jump_reduction_val){
+                    pl_vel_y += jump_reduction_val;
+                } else {
+                    //When reducing that value, zero out if it's negative
+                    pl_vel_y = 0;
+                }
+                //Add jump boost from horizontal movement
+                WORD tempBoost = (pl_vel_x >> 8) * boost_val;
+                //Take the positive value of x-vel
+                tempBoost = MAX(tempBoost, -tempBoost);
+                //This is a test to see if the results will overflow pl_vel_y. Note, pl_vel_y is negative here.
+                if (tempBoost > 32767 + pl_vel_y){
+                    pl_vel_y = -32767;
+                }
+                else{
+                    pl_vel_y += -tempBoost;
+                }
+                hold_jump_val -=1;
+            } else if (INPUT_PLATFORM_JUMP && pl_vel_y < 0){
+                //After the jump frames end, use the reduced gravity
+                pl_vel_y += plat_hold_grav;
+            } else if (pl_vel_y >= 0){
+                que_state = FALL_INIT;
+                pl_vel_y += plat_grav;
+            } else {
+                pl_vel_y += plat_grav;
+            }
+
+            temp_y = PLAYER.pos.y;
+            //Start DeltaX with Actor offsets
+            deltaY += pl_vel_y >> 8;
+
+            //Horizontal Movement-----------------------------------------------------------------------------------------
+            if (nocontrol_h != 0 || plat_air_control == 0){
+                //If the player doesn't have control of their horizontal movement, skip acceleration phase
+                deltaX += pl_vel_x >> 8;
+                goto gotoXCol;
+            } 
+        }
+        break;
     //================================================================================================================
         case DASH_INIT:{
             dash_init_switch();
@@ -526,123 +684,14 @@ void platform_update() BANKED {
         }
         goto gotoSwitch2;
     //================================================================================================================
-        case GROUND_INIT:
-            que_state = GROUND_STATE;
+        case LADDER_INIT:
+            plat_state = LADDER_STATE;
+            que_state = LADDER_STATE;
             jump_type = 0;
-            wc_val = 0;
-            ct_val = plat_coyote_max; 
-            dj_val = plat_extra_jumps; 
-            wj_val = plat_wall_jump_max;
-            jump_reduction_val = 0;
-            
-        case GROUND_STATE:{
-            //Add X & Y motion from moving platforms
-            //Transform velocity into positional data, to keep the precision of the platform's movement
-            if (actor_attached){
-                //If the platform has been disabled, detach the player
-                if(last_actor->disabled == TRUE){
-                    que_state = FALL_INIT;
-                    actor_attached = FALSE;
-                //If the player is off the platform to the right, detach from the platform
-                } else if (PLAYER.pos.x + (PLAYER.bounds.left << 4) > last_actor->pos.x + 16 + (last_actor->bounds.right<< 4)) {
-                    que_state = FALL_INIT;
-                    actor_attached = FALSE;
-                //If the player is off the platform to the left, detach
-                } else if (PLAYER.pos.x + 16 + (PLAYER.bounds.right << 4) < last_actor->pos.x + (last_actor->bounds.left << 4)){
-                    que_state = FALL_INIT;
-                    actor_attached = FALSE;
-                } else{
-                //Otherwise, add any change in movement from platform
-                    deltaX += (last_actor->pos.x - mp_last_x);
-                    mp_last_x = last_actor->pos.x;
-                }
-
-                //If we're on a platform, zero out any other motion from gravity or other sources
-                pl_vel_y = 0;
-                
-                //Add any change from the platform we're standing on
-                deltaY += last_actor->pos.y - mp_last_y;
-
-                //We're setting these to the platform's position, rather than the actor so that if something causes the player to
-                //detach (like hitting the roof), they won't automatically get re-attached in the subsequent actor collision step.
-                mp_last_y = last_actor->pos.y;
-                temp_y = last_actor->pos.y;
-            } else if (nocollide != 0){
-                //If we're dropping through a platform
-                pl_vel_y = 7000; //magic number, rough minimum for actually having the player descend through a platform
-                temp_y = PLAYER.pos.y;
-            } else {
-                //Normal gravity
-                pl_vel_y += plat_grav;
-                temp_y = PLAYER.pos.y;
-                que_state = FALL_INIT; //Use this to test for Falling, avoids an If test in YCollision
-            }
-
-            // Add Collision Offset from Moving Platforms
-            deltaY += pl_vel_y >> 8;
-
+        case LADDER_STATE:{
+            ladder_switch();
         }
-        break;
-    //================================================================================================================
-        case JUMP_INIT:
-            //Right now this has a limited use because many of the jump effects depend on testing INPUT_PLATFORM_JUMP
-            //But if the player switches to this state without pressing jump, then these won't fire...
-            hold_jump_val = plat_hold_jump_max; 
-            actor_attached = FALSE;
-            pl_vel_y = -plat_jump_min;
-            jb_val = 0;
-            ct_val = 0;
-            wc_val = 0;
-            que_state = JUMP_STATE;
-        case JUMP_STATE: {
-            //Vertical Movement-------------------------------------------------------------------------------------------
-            //Add jump force during each jump frame
-            if (hold_jump_val !=0 && INPUT_PLATFORM_JUMP){
-                //Add the boost per frame amount.
-                pl_vel_y -= jump_per_frame;
-                //Reduce subsequent jump amounts (for double jumps)
-                if (plat_jump_vel >= jump_reduction_val){
-                    pl_vel_y += jump_reduction_val;
-                } else {
-                    //When reducing that value, zero out if it's negative
-                    pl_vel_y = 0;
-                }
-                //Add jump boost from horizontal movement
-                WORD tempBoost = (pl_vel_x >> 8) * boost_val;
-                //Take the positive value of x-vel
-                tempBoost = MAX(tempBoost, -tempBoost);
-                //This is a test to see if the results will overflow pl_vel_y. Note, pl_vel_y is negative here.
-                if (tempBoost > 32767 + pl_vel_y){
-                    pl_vel_y = -32767;
-                }
-                else{
-                    pl_vel_y += -tempBoost;
-                }
-                hold_jump_val -=1;
-            } else if (INPUT_PLATFORM_JUMP && pl_vel_y < 0){
-                //After the jump frames end, use the reduced gravity
-                pl_vel_y += plat_hold_grav;
-            } else if (pl_vel_y >= 0){
-                que_state = FALL_INIT;
-                pl_vel_y += plat_grav;
-            } else {
-                pl_vel_y += plat_grav;
-            }
-
-
-
-            temp_y = PLAYER.pos.y;
-            //Start DeltaX with Actor offsets
-            deltaY += pl_vel_y >> 8;
-
-            //Horizontal Movement-----------------------------------------------------------------------------------------
-            if (nocontrol_h != 0 || plat_air_control == 0){
-                //If the player doesn't have control of their horizontal movement, skip acceleration phase
-                deltaX += pl_vel_x >> 8;
-                goto gotoXCol;
-            } 
-        }
-        break;
+        goto gotoActorCol;
     //================================================================================================================
         case WALL_INIT:
             que_state = WALL_STATE;
@@ -668,45 +717,6 @@ void platform_update() BANKED {
             //Vertical Collision Checks
             deltaY += pl_vel_y >> 8;
             temp_y = PLAYER.pos.y;    
-        }
-        break;
-    //================================================================================================================
-        case FALL_INIT:
-            que_state = FALL_STATE;
-        case FALL_STATE: {
-            jump_type = 0;  //Keep this here, rather than in init, so that we can easily track float as a jump type
-
-            //FLOAT INPUT
-            if ((plat_float_input == 1 && INPUT_PLATFORM_JUMP) || (plat_float_input == 2 && INPUT_UP)){
-                jump_type = 4;
-            }
-
-            //Vertical Movement--------------------------------------------------------------------------------------------
-            if (nocollide != 0){
-                pl_vel_y = 7000; //magic number, rough minimum for actually having the player descend through a platform
-            } else if (INPUT_PLATFORM_JUMP && pl_vel_y < 0) {
-                //Gravity while holding jump
-                pl_vel_y += plat_hold_grav;
-            } else if (jump_type == 4 && pl_vel_y >= 0){
-                pl_vel_y = plat_float_grav;
-            } else {
-                //Normal gravity
-                pl_vel_y += plat_grav;
-            }
-            // Clamp Y Velocity
-            pl_vel_y = MIN(pl_vel_y,plat_max_fall_vel);
-        
-            //Collision ---------------------------------------------------------------------------------------------------
-            //Vertical Collision Checks
-            deltaY += pl_vel_y >> 8;
-            temp_y = PLAYER.pos.y;    
-
-            //Horizontal Movement----------------------------------------------------------------------------------------
-            if (nocontrol_h != 0 || plat_air_control == 0){
-                //No horizontal input
-                deltaX += pl_vel_x >> 8;
-                goto gotoXCol;
-            } 
         }
         break;
     //================================================================================================================
@@ -1035,151 +1045,6 @@ void platform_update() BANKED {
     gotoSwitch2:
     //SWITCH for Animation and State Change==========================================================================
     switch(plat_state){
-        case DASH_STATE: {
-            //ANIMATION-------------------------------------------------------------------------------------------------------
-            //Currently this animation uses the 'jump' animation is it's default. 
-            basic_anim();
-
-            //STATE CHANGE: No exits above.------------------------------------------------------------------------------------
-            //DASH -> NEUTRAL Check
-            //Colliding with a wall sets the currentframe to 0 above.
-            if (dash_currentframe == 0){
-                que_state = FALL_INIT;
-            } else{
-                dash_currentframe -= 1;
-            }
-            
-            //CHECKS-------------------------------------------------------------------------------------------------------
-            if (plat_dash_through == 1){
-                goto gotoTriggerCol;
-            }
-
-            if(plat_dash_through >= 2){
-                goto gotoCounters;
-            }
-        
-        }
-        break;  
-    //================================================================================================================
-        case GROUND_INIT:
-        case GROUND_STATE:{
-            //ANIMATION---------------------------------------------------------------------------------------------------
-            //Button direction overrides velocity, for slippery run reasons
-            if (INPUT_LEFT){
-                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
-            } else if (INPUT_RIGHT){
-                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
-            } else if (pl_vel_x < 0) {
-                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
-            } else if (pl_vel_x > 0) {
-                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
-            } else {
-                actor_set_anim_idle(&PLAYER);
-            }
-
-            //STATE CHANGE: Above, basic_y_col can shift to FALL_STATE.--------------------------------------------------
-            //GROUND -> DASH Check
-            if (dash_press && plat_dash_style != 1 && dash_ready_val == 0) {
-                que_state = DASH_INIT;
-                break;
-            }
-            //GROUND -> JUMP Check
-
-            if (INPUT_PRESSED(INPUT_PLATFORM_JUMP) || jb_val != 0){
-                if (nocollide == 0){
-                    //Standard Jump
-                    jump_type = 1;
-                    que_state = JUMP_INIT;
-                    break;
-                }
-            }
-            jb_val = 0;
-
-            //GROUND -> LADDER Check
-            ladder_check();
-
-            //COUNTERS
-            // Counting down the drop-through floor frames
-           // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
-            if (nocollide != 0){
-                nocollide -= 1;
-            }
-        }
-        break;
-    //================================================================================================================
-        case JUMP_INIT:
-        case JUMP_STATE: {
-            //ANIMATION---------------------------------------------------------------------------------------------------
-            basic_anim();
-
-            //STATE CHANGE------------------------------------------------------------------------------------------------
-            //Above: JUMP-> NEUTRAL when a) player starts descending, b) player hits roof, c) player stops pressing, d)jump frames run out.
-            //JUMP -> WALL check
-            wall_check();
-
-            //JUMP -> DASH check
-            if(dash_press && dash_ready_val == 0){
-                if(plat_dash_style != 0 || ct_val != 0){
-                    que_state = DASH_INIT;
-                    break;
-                }
-            } 
-            //JUMP -> LADDER check
-            ladder_check();
-
-            // Counting down No Control frames
-            // Set in Wall and Fall states, checked in Fall and Jump states
-            if (nocontrol_h != 0){
-                nocontrol_h -= 1;
-            }
-        }
-        break;
-    //================================================================================================================
-        case WALL_INIT:
-        case WALL_STATE:{
-            //ANIMATION---------------------------------------------------------------------------------------------------
-            //Face away from walls...Why isn't this working?
-            if (col == 1){
-                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
-            } else if (col == -1){
-                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
-            }
-
-            //STATE CHANGE------------------------------------------------------------------------------------------------
-            //Above, basic_y_col can cause WALL -> GROUNDED.
-            //Exit state as baseline
-            //WALL CHECK
-            wall_check();
-            
-            //WALL -> DASH Check
-            if(dash_press && plat_dash_style != 0 && dash_ready_val == 0){
-                que_state = DASH_INIT;
-                break;
-            }
-            //WALL -> JUMP Check
-            if (INPUT_PRESSED(INPUT_PLATFORM_JUMP) && wj_val != 0){
-                //Wall Jump
-                wj_val -= 1;
-                nocontrol_h = 5;
-                pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
-                jump_type = 3;
-                que_state = JUMP_INIT;
-                break;
-                
-            } 
-            //WALL -> LADDER Check
-            ladder_check();
-
-
-            //COUNTERS
-            // Counting down the drop-through floor frames
-           // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
-            if (nocollide != 0){
-                nocollide -= 1;
-            }
-        }
-        break;
-    //================================================================================================================
         case FALL_INIT:
         case FALL_STATE: {
             //ANIMATION--------------------------------------------------------------------------------------------------
@@ -1234,6 +1099,11 @@ void platform_update() BANKED {
             } 
         //NEUTRAL -> LADDER check
             ladder_check();
+
+        //Check for final frame
+        if (que_state != FALL_STATE){
+            plat_state = FALL_END;
+        }
         
         //COUNTERS
             // Counting down Jump Buffer Window
@@ -1258,6 +1128,170 @@ void platform_update() BANKED {
             if (wc_val !=0 && col == 0){
                 wc_val -= 1;
             }
+            // Counting down the drop-through floor frames
+           // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
+            if (nocollide != 0){
+                nocollide -= 1;
+            }
+        }
+        break;
+    //================================================================================================================
+        case GROUND_INIT:
+        case GROUND_STATE:{
+            //ANIMATION---------------------------------------------------------------------------------------------------
+            //Button direction overrides velocity, for slippery run reasons
+            if (INPUT_LEFT){
+                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
+            } else if (INPUT_RIGHT){
+                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
+            } else if (pl_vel_x < 0) {
+                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
+            } else if (pl_vel_x > 0) {
+                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
+            } else {
+                actor_set_anim_idle(&PLAYER);
+            }
+
+            //STATE CHANGE: Above, basic_y_col can shift to FALL_STATE.--------------------------------------------------
+            //GROUND -> DASH Check
+            if (dash_press && plat_dash_style != 1 && dash_ready_val == 0) {
+                que_state = DASH_INIT;
+                break;
+            }
+            //GROUND -> JUMP Check
+
+            if (INPUT_PRESSED(INPUT_PLATFORM_JUMP) || jb_val != 0){
+                if (nocollide == 0){
+                    //Standard Jump
+                    jump_type = 1;
+                    que_state = JUMP_INIT;
+                    break;
+                }
+            }
+            jb_val = 0;
+
+            //GROUND -> LADDER Check
+            ladder_check();
+
+            //Check for final frame
+            if (que_state != GROUND_STATE){
+                plat_state = GROUND_END;
+            }
+
+            //COUNTERS
+            // Counting down the drop-through floor frames
+           // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
+            if (nocollide != 0){
+                nocollide -= 1;
+            }
+        }
+        break;
+    //================================================================================================================
+        case JUMP_INIT:
+        case JUMP_STATE: {
+            //ANIMATION---------------------------------------------------------------------------------------------------
+            basic_anim();
+
+            //STATE CHANGE------------------------------------------------------------------------------------------------
+            //Above: JUMP-> NEUTRAL when a) player starts descending, b) player hits roof, c) player stops pressing, d)jump frames run out.
+            //JUMP -> WALL check
+            wall_check();
+
+            //JUMP -> DASH check
+            if(dash_press && dash_ready_val == 0){
+                if(plat_dash_style != 0 || ct_val != 0){
+                    que_state = DASH_INIT;
+                    break;
+                }
+            } 
+            //JUMP -> LADDER check
+            ladder_check();
+
+            //Check for final frame
+            if (que_state != JUMP_STATE){
+                plat_state = JUMP_END;
+            }
+
+            // Counting down No Control frames
+            // Set in Wall and Fall states, checked in Fall and Jump states
+            if (nocontrol_h != 0){
+                nocontrol_h -= 1;
+            }
+        }
+        break;
+    //================================================================================================================
+        case DASH_STATE: {
+            //ANIMATION-------------------------------------------------------------------------------------------------------
+            //Currently this animation uses the 'jump' animation is it's default. 
+            basic_anim();
+
+            //STATE CHANGE: No exits above.------------------------------------------------------------------------------------
+            //DASH -> NEUTRAL Check
+            //Colliding with a wall sets the currentframe to 0 above.
+            if (dash_currentframe == 0){
+                que_state = FALL_INIT;
+            } else{
+                dash_currentframe -= 1;
+            }
+            
+            //CHECKS-------------------------------------------------------------------------------------------------------
+            if (plat_dash_through == 1){
+                goto gotoTriggerCol;
+            }
+
+            if(plat_dash_through >= 2){
+                goto gotoCounters;
+            }
+
+            //Check for final frame
+            if (que_state != DASH_STATE){
+                plat_state = DASH_END;
+            }
+        
+        }
+        break;  
+    //================================================================================================================
+        case WALL_INIT:
+        case WALL_STATE:{
+            //ANIMATION---------------------------------------------------------------------------------------------------
+            //Face away from walls...Why isn't this working?
+            if (col == 1){
+                actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
+            } else if (col == -1){
+                actor_set_dir(&PLAYER, DIR_RIGHT, TRUE);
+            }
+
+            //STATE CHANGE------------------------------------------------------------------------------------------------
+            //Above, basic_y_col can cause WALL -> GROUNDED.
+            //Exit state as baseline
+            //WALL CHECK
+            wall_check();
+            
+            //WALL -> DASH Check
+            if(dash_press && plat_dash_style != 0 && dash_ready_val == 0){
+                que_state = DASH_INIT;
+                break;
+            }
+            //WALL -> JUMP Check
+            if (INPUT_PRESSED(INPUT_PLATFORM_JUMP) && wj_val != 0){
+                //Wall Jump
+                wj_val -= 1;
+                nocontrol_h = 5;
+                pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
+                jump_type = 3;
+                que_state = JUMP_INIT;
+                break;
+                
+            } 
+            //WALL -> LADDER Check
+            ladder_check();
+
+            //Check for final frame
+            if (que_state != WALL_STATE){
+                plat_state = WALL_END;
+            }
+
+            //COUNTERS
             // Counting down the drop-through floor frames
            // XX Checked in Fall, Wall, Ground, and basic_y_col, set in basic_y_col
             if (nocollide != 0){
@@ -1379,7 +1413,30 @@ void platform_update() BANKED {
         camera_deadzone_x -= 1;
     }
 
+    //State-Based Events
+
+
+    //script_execute(BANK(test_symbol0), test_symbol0, 0, 0);
+    //script_event_t * event = &state_events[plat_state];
+    /*if(event->script_bank == test){
+        PLAYER.pos.x += 100;
+        //
+    }*/
+
+    if(state_events[plat_state].script_addr != 0){
+        script_execute(state_events[plat_state].script_bank, state_events[plat_state].script_addr, 0, 0);
+    }
 }
+
+
+
+
+
+
+
+
+
+
 
 void basic_anim() BANKED{
     //This animation is currently shared by jumping, dashing, and falling. Dashing doesn't need this complexity though.
@@ -1485,6 +1542,10 @@ void ladder_switch() BANKED{
     if (INPUT_PRESSED(INPUT_PLATFORM_JUMP)){
         que_state = FALL_INIT;
     }
+    //Check for final frame
+    if (que_state != LADDER_STATE){
+        plat_state = LADDER_END;
+    }
 }
 
 void dash_init_switch() BANKED{
@@ -1588,3 +1649,25 @@ UBYTE drop_press() BANKED{
     }
     return 0;
 }
+//UBYTE slot, UBYTE bank, UBYTE * pc
+//                      
+void assign_state_script(SCRIPT_CTX * THIS) OLDCALL BANKED {
+    UWORD *slot = VM_REF_TO_PTR(FN_ARG2);
+    UBYTE *bank = VM_REF_TO_PTR(FN_ARG1);
+    UBYTE **ptr = VM_REF_TO_PTR(FN_ARG0);
+    //ptrtest = (UBYTE*)test;
+    
+
+
+    //ptrtest = (UBYTE)*VM_REF_TO_PTR(FN_ARG0);
+    //void * ptr = *VM_REF_TO_PTR(FN_ARG0);
+    state_events[*slot].script_bank = *bank;
+    state_events[*slot].script_addr = *ptr;
+}
+
+
+    //state_events[1].script_bank = *bank;
+    
+    //script_event_t * event = &state_events[1];
+    //event->script_bank = &test;
+    //event->script_addr = &ptr;
