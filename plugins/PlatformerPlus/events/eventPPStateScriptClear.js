@@ -26,7 +26,11 @@ const fields = [
           ["14", "End Climbing Ladder"],
           ["15", "Start Wall Slide"],
           ["16", "Wall Sliding"],
-          ["17", "End Wall Slide"]
+          ["17", "End Wall Slide"],
+          ["18", "Knockback State Start"],
+          ["19", "Knockback State"],
+          ["21", "Blank State Start"],
+          ["22", "Blank State"]
         ],
     },
   ];

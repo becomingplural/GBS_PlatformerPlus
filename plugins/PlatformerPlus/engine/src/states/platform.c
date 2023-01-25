@@ -12,6 +12,7 @@ Future notes on things to do:
 - Add check for camera bounds on Dash Init
 
 TARGETS for Optimization
+- State script assignment could be 100% be re-written to avoid all those assignments and directly use the pointers. I am not canny enough to do that.
 - I should be able to combine solid actors and platform actors into a single check...
 - It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
 - I think I can probably combine actor_attached and last_actor
@@ -91,7 +92,7 @@ BUGS:
 #endif
 
 //TEST
-script_state_t state_events[18];
+script_state_t state_events[21];
 
 
 
@@ -500,7 +501,7 @@ void platform_update() BANKED {
         case DASH_INIT:{
             dash_init_switch();
         }
-        return; //Dash Init has a return, unlike other initialization phases, because its calculations are time consuming and we don't want to deal with collision in the same frame.
+        goto gotoCounters; //Dash Init has a return, unlike other initialization phases, because its calculations are time consuming and we don't want to deal with collision in the same frame.
         case DASH_STATE: {
             //Movement & Collision Combined----------------------------------------------------------------------------------
             //Dashing uses much of the basic collision code. Comments here focus on the differences.
