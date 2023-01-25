@@ -1655,19 +1655,14 @@ void assign_state_script(SCRIPT_CTX * THIS) OLDCALL BANKED {
     UWORD *slot = VM_REF_TO_PTR(FN_ARG2);
     UBYTE *bank = VM_REF_TO_PTR(FN_ARG1);
     UBYTE **ptr = VM_REF_TO_PTR(FN_ARG0);
-    //ptrtest = (UBYTE*)test;
-    
-
-
-    //ptrtest = (UBYTE)*VM_REF_TO_PTR(FN_ARG0);
-    //void * ptr = *VM_REF_TO_PTR(FN_ARG0);
     state_events[*slot].script_bank = *bank;
     state_events[*slot].script_addr = *ptr;
 }
 
+void clear_state_script(SCRIPT_CTX * THIS) OLDCALL BANKED {
+    UWORD *slot = VM_REF_TO_PTR(FN_ARG0);
+    state_events[*slot].script_bank = NULL;
+    state_events[*slot].script_addr = NULL;
 
-    //state_events[1].script_bank = *bank;
-    
-    //script_event_t * event = &state_events[1];
-    //event->script_bank = &test;
-    //event->script_addr = &ptr;
+
+}
