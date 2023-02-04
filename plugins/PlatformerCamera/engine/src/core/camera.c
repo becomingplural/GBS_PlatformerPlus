@@ -43,11 +43,11 @@ void camera_update() NONBANKED {
         }*/
         // Horizontal lock
         //Camera - Player = Negative when Player is to the right and camera is catching up by moving right
-        if (plat_camera_follow & 1 && a_x < -camera_deadzone_x - camera_offset_x) {
-            a_x = a_x + camera_deadzone_x - camera_offset_x;
+        if (plat_camera_follow & 1 && a_x < -camera_deadzone_x + camera_offset_x) {
+            a_x = a_x + camera_deadzone_x + camera_offset_x;
             camera_x -= a_x >> plat_camera_catchup;
-        } else if (plat_camera_follow & 2 && a_x > camera_deadzone_x - camera_offset_x) {
-            a_x = a_x - camera_deadzone_x - camera_offset_x;
+        } else if (plat_camera_follow & 2 && a_x > camera_deadzone_x + camera_offset_x) {
+            a_x = a_x - camera_deadzone_x + camera_offset_x;
             camera_x -= a_x >> plat_camera_catchup;
         }
     }
