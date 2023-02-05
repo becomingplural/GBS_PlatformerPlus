@@ -48,12 +48,12 @@ UPDATE()
         Acceleration Code   
         Basic X Collision           gotoXCol
         Basic Y Collision           gotoYCol
+        Actor Collision Check       gotoActorCol
     D. STATE MACHINE 2 SWITCH:      gotoSwitch2
         Animation
         State Change Logic
         Some Counters
-    E. Trigger Check                gotoActorCol
-    F. Actor Collision Check        gotoTriggerCol
+    E. Trigger Check                gotoTriggerCol
     G. Tic Counters                 gotoCounters
 
 
@@ -1146,8 +1146,10 @@ void platform_update() BANKED {
             //FALL -> DASH check
             if(dash_press && dash_ready_val == 0){
                 if (plat_dash_style != 0){
+                    if ((col == 1 && !INPUT_RIGHT) || (col == -1 && !INPUT_LEFT)){
                     que_state = DASH_INIT;
                     break;
+                    }
                 }
                 else if (que_state == GROUND_INIT && plat_dash_style != 1){
                     que_state = DASH_INIT;
@@ -1356,8 +1358,10 @@ void platform_update() BANKED {
             
             //WALL -> DASH Check
             if(dash_press && plat_dash_style != 0 && dash_ready_val == 0){
-                que_state = DASH_INIT;
-                break;
+                if ((col == 1 && !INPUT_RIGHT) || (col == -1 && !INPUT_LEFT)){
+                    que_state = DASH_INIT;
+                    break;
+                }
             }
             //WALL -> JUMP Check
             if (INPUT_PRESSED(INPUT_PLATFORM_JUMP) && wj_val != 0){
