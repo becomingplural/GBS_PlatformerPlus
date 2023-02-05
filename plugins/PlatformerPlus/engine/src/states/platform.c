@@ -183,7 +183,7 @@ UBYTE wj_val;               //Current wall jump
 
 //WALL variables 
 BYTE last_wall;             //tracks the last wall the player touched
-BYTE col;                   //tracks if there is a block left or right
+BYTE col;
 
 //DASH VARIABLES
 UBYTE dash_ready_val;       //tracks the current amount before the dash is ready
@@ -292,7 +292,6 @@ void platform_init() BANKED {
     pl_vel_x = 0;
     pl_vel_y = plat_grav << 2;
     last_wall = 0;                  //This could be 1 bit
-    col = 0;                        //and potentially combined here
     hold_jump_val = plat_hold_jump_max;
     dj_val = 0;
     wj_val = plat_wall_jump_max;
@@ -305,6 +304,7 @@ void platform_init() BANKED {
 void platform_update() BANKED {
     //INITIALIZE VARS
     WORD temp_y = 0;
+    col = 0;                   //tracks if there is a block left or right
     
     //A. INPUT CHECK=================================================================================================
     //Dash Input Check
@@ -1480,7 +1480,6 @@ void wall_check() BANKED {
     } else if (que_state == WALL_STATE){
         que_state = FALL_INIT;
     }
-    col = 0;
 }
 
 void ladder_check() BANKED {
