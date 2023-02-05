@@ -1146,7 +1146,7 @@ void platform_update() BANKED {
             //FALL -> DASH check
             if(dash_press && dash_ready_val == 0){
                 if (plat_dash_style != 0){
-                    if ((col == 1 && !INPUT_RIGHT) || (col == -1 && !INPUT_LEFT)){
+                    if (col == 0 || (col == 1 && !INPUT_RIGHT) || (col == -1 && !INPUT_LEFT)){
                     que_state = DASH_INIT;
                     break;
                     }
