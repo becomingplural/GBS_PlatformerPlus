@@ -1323,6 +1323,11 @@ void platform_update() BANKED {
                 dash_currentframe -= 1;
             }
             
+            //Check for final frame
+            if (que_state != DASH_STATE){
+                plat_state = DASH_END;
+            }
+
             //CHECKS-------------------------------------------------------------------------------------------------------
             if (plat_dash_through == 1){
                 goto gotoTriggerCol;
@@ -1332,10 +1337,7 @@ void platform_update() BANKED {
                 goto gotoCounters;
             }
 
-            //Check for final frame
-            if (que_state != DASH_STATE){
-                plat_state = DASH_END;
-            }
+
         
         }
         break;  
