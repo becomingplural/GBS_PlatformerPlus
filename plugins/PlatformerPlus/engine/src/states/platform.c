@@ -683,6 +683,10 @@ void platform_update() BANKED {
             }
         
         }
+                //CHECKS-------------------------------------------------------------------------------------------------------
+        if (plat_dash_through >= 1){
+            goto gotoSwitch2;
+        }
         goto gotoActorCol;
     //================================================================================================================
         case LADDER_INIT:
@@ -1326,11 +1330,6 @@ void platform_update() BANKED {
             //Check for final frame
             if (que_state != DASH_STATE){
                 plat_state = DASH_END;
-            }
-
-            //CHECKS-------------------------------------------------------------------------------------------------------
-            if (plat_dash_through == 1){
-                goto gotoTriggerCol;
             }
 
             if(plat_dash_through >= 2){
