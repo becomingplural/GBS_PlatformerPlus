@@ -393,6 +393,7 @@ void platform_update() BANKED {
             jump_reduction_val = 0;
             
         case GROUND_STATE:{
+            pl_vel_y = 0;
             //Add X & Y motion from moving platforms
             //Transform velocity into positional data, to keep the precision of the platform's movement
             if (actor_attached){
@@ -1018,7 +1019,6 @@ void platform_update() BANKED {
                         actor_attached = FALSE; //Detach when MP moves through a solid tile.
                         if(plat_state == GROUND_STATE || plat_state == GROUND_INIT){que_state = GROUND_STATE;}
                         else {que_state = GROUND_INIT;}
-                        pl_vel_y = 0;
                         break;
                     }
                     tile_start++;
