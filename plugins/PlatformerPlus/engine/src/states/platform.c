@@ -1394,6 +1394,9 @@ void platform_update() BANKED {
     //================================================================================================================
         case KNOCKBACK_INIT:
         case KNOCKBACK_STATE:
+        if (que_state = GROUND_INIT){
+            pl_vel_y = 0;
+        }
         que_state = KNOCKBACK_STATE;
     }
 
