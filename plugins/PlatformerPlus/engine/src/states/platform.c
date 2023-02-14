@@ -925,13 +925,11 @@ void platform_update() BANKED {
     //FUNCTION X COLLISION
     gotoXCol:
     {
-        //BUG: Leftwards pull when map is at max size and Left or None are selected for edge check
-        //Leftwards pull seems influenced by minimum velocity, which suggests its actually an error above in the acceleration stuff.
-        //However, it is fixed by setting new_x to UWORD
+
         deltaX = CLAMP(deltaX, -127, 127);
         UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
         UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;       
-        WORD new_x = PLAYER.pos.x + deltaX;
+        UWORD new_x = PLAYER.pos.x + deltaX;
         
         //Edge Locking
         //If the player is past the right edge (camera or screen)
