@@ -1084,6 +1084,8 @@ void platform_update() BANKED {
                     } else if (PLAYER.pos.x < hit_actor->pos.x){
                         deltaX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
                         col = 1;
+                        last_wall = 1;
+                        wc_val = plat_coyote_max;
                         if(!INPUT_RIGHT){
                             pl_vel_x = 0;
                         }
@@ -1093,6 +1095,8 @@ void platform_update() BANKED {
                     } else if (PLAYER.pos.x > hit_actor->pos.x){
                         deltaX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
                         col = -1;
+                        last_wall = -1;
+                        wc_val = plat_coyote_max;
                         if (!INPUT_LEFT){
                             pl_vel_x = 0;
                         }
@@ -1344,7 +1348,7 @@ void platform_update() BANKED {
         case WALL_INIT:
         case WALL_STATE:{
             //ANIMATION---------------------------------------------------------------------------------------------------
-            //Face away from walls...Why isn't this working?
+            //Face away from walls
             if (col == 1){
                 actor_set_dir(&PLAYER, DIR_LEFT, TRUE);
             } else if (col == -1){
