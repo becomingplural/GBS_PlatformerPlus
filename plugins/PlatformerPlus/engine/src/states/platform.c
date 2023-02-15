@@ -1036,6 +1036,7 @@ void platform_update() BANKED {
                     if(actor_attached){
                         actor_attached = FALSE;
                         new_y = last_actor->pos.y;
+                        temp_y = last_actor->pos.y + (last_actor->bounds.bottom <<4);
                     }
                     ct_val = 0;
                     que_state = FALL_INIT;
