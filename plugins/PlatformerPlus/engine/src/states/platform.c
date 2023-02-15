@@ -1034,9 +1034,11 @@ void platform_update() BANKED {
                     pl_vel_y = 0;
                     //MP Test: Attempting stuff to stop the player from continuing upward
                     if(actor_attached){
-                        actor_attached = FALSE;
-                        new_y = last_actor->pos.y;
-                        temp_y = last_actor->pos.y + (last_actor->bounds.bottom <<4);
+                        temp_y = last_actor->pos.y;
+                        if (last_actor->bounds.top > 0){
+                            temp_y += last_actor->bounds.top + last_actor->bounds.bottom << 5;
+                        }
+                        new_y = temp_y;
                     }
                     ct_val = 0;
                     que_state = FALL_INIT;
@@ -1140,6 +1142,7 @@ void platform_update() BANKED {
     //SWITCH for Animation and State Change==========================================================================
     switch(plat_state){
         case FALL_INIT:
+            actor_attached = FALSE;
         case FALL_STATE: {
             //ANIMATION--------------------------------------------------------------------------------------------------
             basic_anim();
