@@ -744,6 +744,7 @@ void platform_update() BANKED {
             //Vertical Movement--------------------------------------------------------------------------------------------
             //Normal gravity
             pl_vel_y += plat_grav;
+            pl_vel_y = MIN(pl_vel_y,plat_max_fall_vel);
         
             //Collision ---------------------------------------------------------------------------------------------------
 
