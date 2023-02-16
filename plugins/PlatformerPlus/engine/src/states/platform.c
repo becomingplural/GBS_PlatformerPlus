@@ -385,6 +385,7 @@ void platform_update() BANKED {
     //================================================================================================================
         case GROUND_INIT:
             que_state = GROUND_STATE;
+            pl_vel_y = 0;
             jump_type = 0;
             wc_val = 0;
             ct_val = plat_coyote_max; 
@@ -393,7 +394,7 @@ void platform_update() BANKED {
             jump_reduction_val = 0;
             
         case GROUND_STATE:{
-            pl_vel_y = 0;
+                        
             //Add X & Y motion from moving platforms
             //Transform velocity into positional data, to keep the precision of the platform's movement
             if (actor_attached){
@@ -1016,8 +1017,13 @@ void platform_update() BANKED {
                         land:
                         new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
                         actor_attached = FALSE; //Detach when MP moves through a solid tile.
-                        if(plat_state == GROUND_STATE || plat_state == GROUND_INIT){que_state = GROUND_STATE;}
-                        else {que_state = GROUND_INIT;}
+                        //The distinction here is used so that we can check the velocity when the player hits the ground.
+                        if(plat_state == GROUND_STATE){
+                            que_state = GROUND_STATE; 
+                            pl_vel_y = 0;
+                        } else if(plat_state == GROUND_INIT){
+                            que_state = GROUND_STATE;
+                        } else {que_state = GROUND_INIT;}
                         break;
                     }
                     tile_start++;
