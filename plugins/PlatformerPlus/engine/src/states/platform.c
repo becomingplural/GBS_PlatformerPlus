@@ -1372,7 +1372,7 @@ void platform_update() BANKED {
                 }
             }
             //WALL -> JUMP Check
-            if (INPUT_PRESSED(INPUT_PLATFORM_JUMP) && wj_val != 0){
+            if ((INPUT_PRESSED(INPUT_PLATFORM_JUMP) || jb_val != 0) && wj_val != 0){
                 //Wall Jump
                 wj_val -= 1;
                 nocontrol_h = 5;
