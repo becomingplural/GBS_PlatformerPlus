@@ -734,10 +734,10 @@ void platform_update() BANKED {
         case KNOCKBACK_STATE: {
            //Horizontal Movement----------------------------------------------------------------------------------------
             if (pl_vel_x < 0) {
-                    pl_vel_x += plat_dec;
+                    pl_vel_x += plat_air_dec;
                     pl_vel_x = MIN(pl_vel_x, 0);
             } else if (pl_vel_x > 0) {
-                    pl_vel_x -= plat_dec;
+                    pl_vel_x -= plat_air_dec;
                     pl_vel_x = MAX(pl_vel_x, 0);
             }
             deltaX += pl_vel_x >> 8;
