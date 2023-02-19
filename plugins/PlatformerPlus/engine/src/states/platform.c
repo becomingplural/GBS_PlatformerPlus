@@ -277,13 +277,13 @@ void platform_init() BANKED {
     boost_val = plat_run_boost / plat_hold_jump_max;                  //Vertical boost from horizontal speed per frame in JUMP STATE
 
     //Initialize State
-    plat_state = GROUND_INIT;
-    que_state = GROUND_INIT;
+    plat_state = GROUND_STATE;
+    que_state = GROUND_STATE;
     actor_attached = FALSE;
     run_stage = 0;
     nocontrol_h = 0;
     nocollide = 0;
-    if (PLAYER.dir == DIR_UP || PLAYER.dir == DIR_DOWN) {
+    if (PLAYER.dir == DIR_UP || PLAYER.dir == DIR_DOWN || PLAYER.dir == DIR_NONE) {
         PLAYER.dir = DIR_RIGHT;
     }
 
