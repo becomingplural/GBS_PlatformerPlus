@@ -35,7 +35,8 @@
         [0, "Off"],
         [1, "Down (Hold)"],
         [2, "Down (Tap)"],
-        [3, "Down and Jump"]
+        [3, "Down and Jump (Hold)"],
+        [4, "Down and Jump (Tap)"]
       ],
       "cType": "UBYTE",
       "defaultValue": 0

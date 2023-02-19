@@ -1667,6 +1667,11 @@ UBYTE drop_press() BANKED{
             return 1;
         }
         return 0;
+        case 4:
+        if ((INPUT_PRESSED(INPUT_DOWN) && INPUT_PLATFORM_JUMP) || (INPUT_DOWN && INPUT_PRESSED(INPUT_PLATFORM_JUMP))){
+            return 1;
+        }
+        return 0;
     }
     return 0;
 }
