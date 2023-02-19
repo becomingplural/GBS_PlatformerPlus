@@ -290,7 +290,7 @@ void platform_init() BANKED {
     //Initialize other vars
     game_time = 0;
     pl_vel_x = 0;
-    pl_vel_y = plat_grav << 2;
+    pl_vel_y = 4000;                //Magic number for preventing a small glitch when loading into a scene
     last_wall = 0;                  //This could be 1 bit
     hold_jump_val = plat_hold_jump_max;
     dj_val = 0;
@@ -299,6 +299,7 @@ void platform_init() BANKED {
     jump_type = 0;
     deltaX = 0;
     deltaY = 0;
+
 }
 
 void platform_update() BANKED {
