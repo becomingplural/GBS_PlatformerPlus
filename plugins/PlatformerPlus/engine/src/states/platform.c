@@ -17,6 +17,7 @@ TARGETS for Optimization
 - It's inellegant that the dash check requires me to check again later if it succeeded or not. Can I reorganize this somehow?
 - I think I can probably combine actor_attached and last_actor
 - I need to refactor the downwards collision for Y, it's a bit of a mess at this point. I just can't wrap my head around it atm
+- Wall Slide could be optimized to skill the acceleration bit, as the only thing that matters is tapping away
 
 THINGS TO WATCH
 - Does every state (that needs to) end up resetting DeltaX?
@@ -885,12 +886,10 @@ void platform_update() BANKED {
             }
         } else {
             //Ordinay Walk
-            //And need to re-write the animation bit so that the buttons overpowers the velocity
             if(pl_vel_x < 0 && plat_turn_acc != 0){
                 pl_vel_x += plat_turn_acc;
                 run_stage = -1;
-            }
-            else{
+            } else {
                 run_stage = 0;
                 pl_vel_x += plat_walk_acc;
                 pl_vel_x = CLAMP(pl_vel_x, plat_min_vel, plat_walk_vel); 
@@ -1166,11 +1165,13 @@ void platform_update() BANKED {
                 if (plat_dash_style != 0){
                     if (col == 0 || (col == 1 && !INPUT_RIGHT) || (col == -1 && !INPUT_LEFT)){
                     que_state = DASH_INIT;
+                    plat_state = FALL_END;
                     break;
                     }
                 }
                 else if (que_state == GROUND_INIT && plat_dash_style != 1){
                     que_state = DASH_INIT;
+                    plat_state = FALL_END;
                     break;
                 }
             } 
@@ -1184,11 +1185,13 @@ void platform_update() BANKED {
                     nocontrol_h = 5;
                     pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
                     que_state = JUMP_INIT;
+                    plat_state = FALL_END;
                     break;
                 } else if (ct_val != 0){
                 //Coyote Time Jump
                     jump_type = 1;
                     que_state = JUMP_INIT;
+                    plat_state = FALL_END;
                     break;
                 } else if (dj_val != 0){
                 //Double Jump
@@ -1198,6 +1201,7 @@ void platform_update() BANKED {
                     }
                     jump_reduction_val += jump_reduction;
                     que_state = JUMP_INIT;
+                    plat_state = FALL_END;
                     break;
                 } else {
                 // Setting the Jump Buffer when jump is pressed while not on the ground
@@ -1263,6 +1267,7 @@ void platform_update() BANKED {
             //GROUND -> DASH Check
             if (dash_press && plat_dash_style != 1 && dash_ready_val == 0) {
                 que_state = DASH_INIT;
+                plat_state = GROUND_END;
                 break;
             }
             //GROUND -> JUMP Check
@@ -1272,6 +1277,7 @@ void platform_update() BANKED {
                     //Standard Jump
                     jump_type = 1;
                     que_state = JUMP_INIT;
+                    plat_state = GROUND_END;
                     break;
                 }
             }
@@ -1308,6 +1314,7 @@ void platform_update() BANKED {
             if(dash_press && dash_ready_val == 0){
                 if(plat_dash_style != 0 || ct_val != 0){
                     que_state = DASH_INIT;
+                    plat_state = JUMP_END;
                     break;
                 }
             } 
@@ -1375,9 +1382,11 @@ void platform_update() BANKED {
             if(dash_press && plat_dash_style != 0 && dash_ready_val == 0){
                 if ((col == 1 && !INPUT_RIGHT) || (col == -1 && !INPUT_LEFT)){
                     que_state = DASH_INIT;
+                    plat_state = WALL_END;
                     break;
                 }
             }
+
             //WALL -> JUMP Check
             if ((INPUT_PRESSED(INPUT_PLATFORM_JUMP) || jb_val != 0) && wj_val != 0){
                 //Wall Jump
@@ -1386,9 +1395,10 @@ void platform_update() BANKED {
                 pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
                 jump_type = 3;
                 que_state = JUMP_INIT;
+                plat_state = WALL_END;
                 break;
-                
-            } 
+            }
+
             //WALL -> LADDER Check
             ladder_check();
 
