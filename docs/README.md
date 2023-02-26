@@ -42,8 +42,9 @@ This allows the player to drop through collision tiles that are set to collide o
 | --- | --- |
 | Off | Disables drop-through. |
 | Down (hold) | Holding down drops through any top-collision tiles. |
-| Down (tap) | Pressing down drops through a singleplatform. |
-| Jump and Down | Pressing these two keys togetherdrops through. |
+| Down (tap) | Pressing down drops through a single platform. |
+| Jump and Down (hold) | Pressing these two keys together drops through. |
+| Jump and Down (tap) | Pressing these two keys together drops through a single platform. |
 
 ### PlatformActorCollisionGroup 
 
