@@ -1,6 +1,6 @@
 # A (Rough) Guide to the Platformer+ Settings
 
-Updated for the release of P+ 1.5
+Updated for the release of P+ 1.64
 
 The Platformer+ engine plugin for GBStudio has been out for a few months and has gone through some pretty drastic expansions and modifications in that time. So I thought I would document what the different settings do, where there are small issues, and where some future developments might take place. If you have questions about the plugin, or discover any bugs, I regularly check the GBStudio discord and usually can get a patch together in a day or two.
 
