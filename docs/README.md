@@ -19,7 +19,7 @@ Thanks for all your support, and please drop me a line when you make something w
 
 Platformer+ includes several options for changing how game elements operate. Some of these have been pulled out into two other complementary plugins, **PlatformerCamera** and **PlatformerPlusGravity**. These are designed to work with Platformer+, but can also be removed if you don’t need them. These settings have been organized into a separate settings window to make them easier to adjust.
 
-![image](https://user-images.githubusercontent.com/51967950/213941314-9e473412-b2f1-4006-a916-81cb98595103.png)
+![pplusControls](https://user-images.githubusercontent.com/48106441/221391964-e5151e0e-ecfa-49a5-80bc-20741e5067c2.png)
 
 ### Camera Follow Directions 
 
