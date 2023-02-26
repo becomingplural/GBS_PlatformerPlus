@@ -7,12 +7,11 @@ The Platformer+ engine plugin for GBStudio has been out for a few months and has
 Thanks for all your support, and please drop me a line when you make something with P+, I always love to see what people create!
 
 **Table of Contents**
-- [Platformer Plus Level Settings](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#platformer-plus-level-settings)
+- [Level Settings](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#platformer-plus-level-settings)
 - [Jumping](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#jumping)
 - [Horizontal Motion](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#horizontal-motion)
 - [Dashing](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#dashing)
-- [Engine Field Events with Platformer Plus](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#engine-field-events-with-platformer-plus)
-- [Platformer+ Player Fields](https://github.com/davidmpickett/GBS_PlatformerPlus/blob/main/docs/README.md#platformer-player-fields)
+- [Event Plugins](https://github.com/becomingplural/GBS_PlatformerPlus/blob/main/docs/README.md#platformer-plus-event-plugins)
 
 --- 
 
