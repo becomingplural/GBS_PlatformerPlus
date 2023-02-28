@@ -10,6 +10,14 @@ Future notes on things to do:
 - Improve ladder situation: jump from ladder option, bug with hitting the bottom of ladders, other stuff?
 
 - Add check for camera bounds on Dash Init
+- Solid actors have a fault: they only check collisions once on enter. This is especially problematic because of how GBStudio does invincibility frames,
+  because it means the player can attach to a platform without causing the hit trigger to run. 
+     - 2 potential solutions: 
+     - give the player a minimum velocity every frame, forcing a re-collision. This might break the moving platform code though
+     - manually re-trigger the collision call if the actor is attached.
+
+
+
 
 TARGETS for Optimization
 - State script assignment could be 100% be re-written to avoid all those assignments and directly use the pointers. I am not canny enough to do that.
@@ -387,7 +395,7 @@ void platform_update() BANKED {
     //================================================================================================================
         case GROUND_INIT:
             que_state = GROUND_STATE;
-            pl_vel_y = 0;
+            pl_vel_y = 256;
             jump_type = 0;
             wc_val = 0;
             ct_val = plat_coyote_max; 
@@ -659,7 +667,7 @@ void platform_update() BANKED {
                             //Land on Floor
                             new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
                             actor_attached = FALSE; //Detach when MP moves through a solid tile.                                   
-                            pl_vel_y = 0;
+                            pl_vel_y = 256;
                             break;
                         }
                         tile_start++;
@@ -1020,7 +1028,7 @@ void platform_update() BANKED {
                         //The distinction here is used so that we can check the velocity when the player hits the ground.
                         if(plat_state == GROUND_STATE){
                             que_state = GROUND_STATE; 
-                            pl_vel_y = 0;
+                            pl_vel_y = 256;
                         } else if(plat_state == GROUND_INIT){
                             que_state = GROUND_STATE;
                         } else {que_state = GROUND_INIT;}
@@ -1419,7 +1427,7 @@ void platform_update() BANKED {
         case KNOCKBACK_INIT:
         case KNOCKBACK_STATE:
         if (que_state == GROUND_INIT){
-            pl_vel_y = 0;
+            pl_vel_y = 256;
         }
         que_state = KNOCKBACK_STATE;
     }
