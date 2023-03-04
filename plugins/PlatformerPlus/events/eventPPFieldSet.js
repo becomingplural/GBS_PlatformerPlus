@@ -4,6 +4,9 @@ const name = "Update Platformer+ Field";
 
 const fields = [
   {
+    label: "Note: Changes implemented with this event will not carry over between scenes (use Update Engine Field for that).",
+  },  
+  {
     key: "field",
     label: "Field",
     type: "select",
@@ -11,6 +14,10 @@ const fields = [
     options: [
       ["dj_val", "Number of double jumps left"],
       ["wj_val", "Number of wall jumps left"],
+      ["jump_per_frame", "Jump amount (per frame)"],
+      ["plat_hold_jump_max", "Jump Frames"],
+      ["boost_val", "Jump increase from running (per frame)"],
+      ["dash_distance", "Dash distance (per frame)"],
     ],
   },
   {
@@ -33,7 +40,7 @@ const fields = [
         type: "number",
         defaultValue: 0,
         min: 0,
-        max: 255,
+        max: 16384,
         conditions: [
           {
             key: "type",
@@ -53,12 +60,14 @@ const fields = [
       },
     ],
   },
+  {
+    label: "Some variables are listed as per frame. The event does not have access to how many frames the jump and dash are set to, so you must do the division yourself. Additionally, raising the jump amounts too high has the potential to break your jump (try lower values if it stops working).",
+  },
 ];
 
 const compile = (input, helpers) => {
   const { _addComment, _addNL, _setConstMemInt16, _setMemInt16ToVariable } =
     helpers;
-
   if (input.type === "variable") {
     _addComment("Platformer Plus Field Set To Variable");
     _setMemInt16ToVariable(input.field, input.variable);

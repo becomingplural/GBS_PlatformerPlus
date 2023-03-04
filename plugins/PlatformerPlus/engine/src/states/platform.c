@@ -358,14 +358,12 @@ void platform_update() BANKED {
             que_state = FALL_STATE;
         case FALL_STATE: {
             jump_type = 0;  //Keep this here, rather than in init, so that we can easily track float as a jump type
-
+            
             //Vertical Movement--------------------------------------------------------------------------------------------
             //FLOAT INPUT
-            if ((plat_float_input == 1 && INPUT_PLATFORM_JUMP) || (plat_float_input == 2 && INPUT_UP)){
-                if (pl_vel_y >= 0){
-                    jump_type = 4;
-                    pl_vel_y = plat_float_grav;
-                }
+            if (((plat_float_input == 1 && INPUT_PLATFORM_JUMP) || (plat_float_input == 2 && INPUT_UP)) && pl_vel_y >= 0){
+                jump_type = 4;
+                pl_vel_y = plat_float_grav;
             } else if (nocollide != 0){
                 //magic number, rough minimum for actually having the player descend through a platform
                 pl_vel_y = 7000; 
