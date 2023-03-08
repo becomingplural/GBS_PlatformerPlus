@@ -150,6 +150,7 @@ UBYTE plat_dash_through;    //Choose if the player can dash through actors, trig
 WORD plat_dash_dist;        //Distance of the dash
 UBYTE plat_dash_frames;     //Number of frames for dashing
 UBYTE plat_dash_ready_max;  //Time before the player can dash again
+UBYTE plat_dash_deadzone;
 
 enum pStates {              //Datatype for tracking states
     FALL_INIT = 0,
@@ -552,11 +553,11 @@ void platform_update() BANKED {
                             }   
                         }
                         //Check for Triggers at each step. If there is a trigger stop the dash (but don't run the trigger yet).
-                        if (plat_dash_through < 2){
+                        /*if (plat_dash_through < 2){
                             if (trigger_at_tile(tile_current, tile_start) != NO_TRIGGER_COLLISON) {
                                 new_x = ((((tile_current+1) << 3) - PLAYER.bounds.right) << 4);
                             }
-                        }
+                        }*/
                         tile_start++;
                     }
                     
@@ -602,12 +603,12 @@ void platform_update() BANKED {
                             }
                         }
                         //Check for triggers
-                        if (plat_dash_through  < 2){
+                        /*if (plat_dash_through  < 2){
                             if (trigger_at_tile(tile_current, tile_start) != NO_TRIGGER_COLLISON) {
                                 new_x = ((((tile_current - 1) << 3) - PLAYER.bounds.left) << 4);
                                 goto endLcol;
                             }
-                        }  
+                        }*/  
                         tile_start++;
                     }
                     tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top) >> 3);
@@ -787,7 +788,7 @@ void platform_update() BANKED {
         }
 
         if (INPUT_PLATFORM_RUN){
-            switch(plat_run_type) {
+            switch(plat_run_type){
                 case 0:
                 //Ordinay Walk (same as below). I can't think of a way to collapse these two uses.
                     if(pl_vel_x < 0 && plat_turn_acc != 0){
@@ -933,7 +934,6 @@ void platform_update() BANKED {
     //FUNCTION X COLLISION
     gotoXCol:
     {
-
         deltaX = CLAMP(deltaX, -127, 127);
         UBYTE tile_start = (((PLAYER.pos.y >> 4) + PLAYER.bounds.top)    >> 3);
         UBYTE tile_end   = (((PLAYER.pos.y >> 4) + PLAYER.bounds.bottom) >> 3) + 1;       
@@ -1067,7 +1067,6 @@ void platform_update() BANKED {
     //Actor Collisions
     gotoActorCol:
     {
-
         deltaX = 0;
         deltaY = 0;
         actor_t *hit_actor;
@@ -1430,8 +1429,6 @@ void platform_update() BANKED {
         que_state = KNOCKBACK_STATE;
     }
 
-
-
     gotoTriggerCol:
     //FUNCTION TRIGGERS
     if (trigger_activate_at_intersection(&PLAYER.bounds, &PLAYER.pos, INPUT_UP_PRESSED)) {
@@ -1653,7 +1650,7 @@ void dash_init_switch() BANKED{
     }
     initDash:
     actor_attached = FALSE;
-    camera_deadzone_x = 32;
+    camera_deadzone_x = plat_dash_deadzone;
     dash_ready_val = plat_dash_ready_max + plat_dash_frames;
     if(plat_dash_momentum < 2){
         pl_vel_y = 0;

@@ -348,6 +348,16 @@
       "defaultValue": 10,
       "min": 0,
       "max": 128
+    },
+    {
+      "key": "plat_dash_deadzone",
+      "label": "Dash Camera Deadzone",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 4,
+      "min": 0,
+      "max": 32
     }
   ]
 }

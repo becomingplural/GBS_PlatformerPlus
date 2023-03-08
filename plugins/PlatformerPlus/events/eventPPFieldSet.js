@@ -14,6 +14,7 @@ const fields = [
     options: [
       ["dj_val", "Number of double jumps left"],
       ["wj_val", "Number of wall jumps left"],
+      ["nocollide", "Frames of drop-through."],
       ["jump_per_frame", "Jump amount (per frame)"],
       ["plat_hold_jump_max", "Jump Frames"],
       ["boost_val", "Jump increase from running (per frame)"],
