@@ -1431,10 +1431,7 @@ void platform_update() BANKED {
 
     gotoTriggerCol:
     //FUNCTION TRIGGERS
-    if (trigger_activate_at_intersection(&PLAYER.bounds, &PLAYER.pos, INPUT_UP_PRESSED)) {
-        return;
-        // Landed on a trigger
-    }
+    trigger_activate_at_intersection(&PLAYER.bounds, &PLAYER.pos, INPUT_UP_PRESSED)
 
     gotoCounters:
     //COUNTERS===============================================================
