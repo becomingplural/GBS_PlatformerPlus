@@ -18,7 +18,7 @@ const fields = [
       ["jump_per_frame", "Jump amount (per frame)"],
       ["plat_hold_jump_max", "Jump Frames"],
       ["boost_val", "Jump increase from running (per frame)"],
-      ["dash_distance", "Dash distance (per frame)"],
+      ["dash_dist", "Dash distance (per frame)"],
     ],
   },
   {
