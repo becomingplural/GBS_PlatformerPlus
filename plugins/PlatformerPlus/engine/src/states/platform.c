@@ -1323,13 +1323,40 @@ void platform_update() BANKED {
                     break;
                 }
             } 
+
+            //JUMP -> JUMP check 
+            if (INPUT_PRESSED(INPUT_PLATFORM_JUMP)){
+                //Wall Jump
+                if(wc_val != 0 && wj_val != 0){
+                    jump_type = 3;
+                    wj_val -= 1;
+                    nocontrol_h = 5;
+                    pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
+                    que_state = JUMP_INIT;
+                    plat_state = JUMP_END;
+                }  else if (dj_val != 0){
+                //Double Jump
+                    jump_type = 2;
+                    if (dj_val != 255){
+                        dj_val -= 1;
+                    }
+                    jump_reduction_val += jump_reduction;
+                    que_state = JUMP_INIT;
+                    plat_state = JUMP_END;
+                }
+                break;
+            } 
+
             //JUMP -> LADDER check
             ladder_check();
+
 
             //Check for final frame
             if (que_state != JUMP_STATE){
                 plat_state = JUMP_END;
             }
+
+
 
             // Counting down No Control frames
             // Set in Wall and Fall states, checked in Fall and Jump states
