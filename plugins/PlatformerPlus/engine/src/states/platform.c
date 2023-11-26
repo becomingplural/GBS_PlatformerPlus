@@ -1424,7 +1424,7 @@ void platform_update() BANKED {
                 //Wall Jump
                 wj_val -= 1;
                 nocontrol_h = 5;
-                pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
+                pl_vel_x = (plat_wall_kick + plat_walk_vel)*-last_wall;
                 jump_type = 3;
                 que_state = JUMP_INIT;
                 plat_state = WALL_END;
