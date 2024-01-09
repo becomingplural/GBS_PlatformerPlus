@@ -701,7 +701,6 @@ void platform_update() BANKED {
         goto gotoActorCol;
     //================================================================================================================
         case LADDER_INIT:
-            plat_state = LADDER_STATE;
             que_state = LADDER_STATE;
             jump_type = 0;
         case LADDER_STATE:{
