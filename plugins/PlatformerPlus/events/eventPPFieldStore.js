@@ -15,6 +15,7 @@ const fields = [
       ["ct_val", "Frames of coyote time left"],
       ["dj_val", "Number of double jumps left"],
       ["wj_val", "Number of wall jumps left"],
+      ["wc_val", "Test if you're colliding with a wall (0 is false)"],
       ["dash_interrupt", "Checks if Dashing is Frozen (true false)"],
       ["que_state", "The player's upcoming state. "]
     ],
@@ -37,6 +38,7 @@ const compile = (input, helpers) => {
     ct_val: "UINT8",
     dj_val: "UINT8",
     wj_val: "UINT8",
+    wc_val: "UINT8",
     que_state: "UINT8"
   };
 
