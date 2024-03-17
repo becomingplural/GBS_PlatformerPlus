@@ -968,7 +968,7 @@ void platform_update() BANKED {
                     pl_vel_x = 0;
                     col = 1;
                     last_wall = 1;
-                    wc_val = plat_coyote_max;
+                    wc_val = plat_coyote_max + 1;
                     break;
                 }
                 tile_start++;
@@ -981,7 +981,7 @@ void platform_update() BANKED {
                     pl_vel_x = 0;
                     col = -1;
                     last_wall = -1;
-                    wc_val = plat_coyote_max;
+                    wc_val = plat_coyote_max + 1;
                     break;
                 }
                 tile_start++;
@@ -1097,7 +1097,7 @@ void platform_update() BANKED {
                         deltaX = (hit_actor->pos.x - PLAYER.pos.x) - ((PLAYER.bounds.right + -hit_actor->bounds.left)<<4);
                         col = 1;
                         last_wall = 1;
-                        wc_val = plat_coyote_max;
+                        wc_val = plat_coyote_max + 1;
                         if(!INPUT_RIGHT){
                             pl_vel_x = 0;
                         }
@@ -1108,7 +1108,7 @@ void platform_update() BANKED {
                         deltaX = (hit_actor->pos.x - PLAYER.pos.x) + ((-PLAYER.bounds.left + hit_actor->bounds.right)<<4)+16;
                         col = -1;
                         last_wall = -1;
-                        wc_val = plat_coyote_max;
+                        wc_val = plat_coyote_max  + 1;
                         if (!INPUT_LEFT){
                             pl_vel_x = 0;
                         }
@@ -1330,7 +1330,7 @@ void platform_update() BANKED {
                     jump_type = 3;
                     wj_val -= 1;
                     nocontrol_h = 5;
-                    pl_vel_x += (plat_wall_kick + plat_walk_vel)*-last_wall;
+                    pl_vel_x = (plat_wall_kick + plat_walk_vel)*-last_wall;
                     que_state = JUMP_INIT;
                     plat_state = JUMP_END;
                 }  else if (dj_val != 0){
