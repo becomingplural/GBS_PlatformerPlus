@@ -62,5 +62,6 @@ extern UBYTE plat_dash_through;
 extern WORD plat_dash_dist;       
 extern UBYTE plat_dash_frames;
 extern UBYTE plat_dash_ready_max; 
+extern UBYTE plat_jump_through_snap_threshold; 
 
 #endif

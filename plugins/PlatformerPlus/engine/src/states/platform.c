@@ -151,6 +151,7 @@ WORD plat_dash_dist;        //Distance of the dash
 UBYTE plat_dash_frames;     //Number of frames for dashing
 UBYTE plat_dash_ready_max;  //Time before the player can dash again
 UBYTE plat_dash_deadzone;
+UBYTE plat_jump_through_snap_threshold;  //Pixel threshold while jumping through a platform to "snap" land
 
 enum pStates {              //Datatype for tracking states
     FALL_INIT = 0,
@@ -996,14 +997,22 @@ void platform_update() BANKED {
         deltaY = CLAMP(deltaY, -127, 127);
         UBYTE tile_start = (((PLAYER.pos.x >> 4) + PLAYER.bounds.left)  >> 3);
         UBYTE tile_end   = (((PLAYER.pos.x >> 4) + PLAYER.bounds.right) >> 3) + 1;
+        WORD new_y = PLAYER.pos.y + deltaY;
         if (deltaY > 0) {
-            //Moving Downward
-            WORD new_y = PLAYER.pos.y + deltaY;
             UBYTE tile_y = ((new_y >> 4) + PLAYER.bounds.bottom) >> 3;
+            //Moving Downward
             if (nocollide == 0){
                 //Check collisions from left to right with the bottom of the player
                 while (tile_start != tile_end) {
                     if (tile_at(tile_start, tile_y) & COLLISION_TOP) {
+                        WORD snap_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
+                        // If coming from below && not grounded && no bottom collision (1 way plat)
+                        if (PLAYER.pos.y > snap_y && plat_state != GROUND_STATE && !(tile_at(tile_start, tile_y) & COLLISION_BOTTOM)) {
+                            // Only snap to the platform within a threshold
+                            if (snap_y < new_y && ((new_y - snap_y) > (plat_jump_through_snap_threshold << 4))) {
+                                goto endYCollision;
+                            }
+                        }
                         //Drop-Through Floor Check 
                         if (drop_press()){
                             //If it's a regular tile, do not drop through
@@ -1020,7 +1029,7 @@ void platform_update() BANKED {
                         }
                         //Land on Floor
                         land:
-                        new_y = ((((tile_y) << 3) - PLAYER.bounds.bottom) << 4) - 1;
+                        new_y = snap_y;
                         actor_attached = FALSE; //Detach when MP moves through a solid tile.
                         //The distinction here is used so that we can check the velocity when the player hits the ground.
                         if(plat_state == GROUND_STATE){
@@ -1034,12 +1043,9 @@ void platform_update() BANKED {
                     tile_start++;
                 }
             }
-            PLAYER.pos.y = new_y;
-
         } else if (deltaY < 0) {
-            //Moving Upward
-            WORD new_y = PLAYER.pos.y + deltaY;
             UBYTE tile_y = (((new_y >> 4) + PLAYER.bounds.top) >> 3);
+            //Moving Upward
             while (tile_start != tile_end) {
                 if (tile_at(tile_start, tile_y) & COLLISION_BOTTOM) {
                     new_y = ((((UBYTE)(tile_y + 1) << 3) - PLAYER.bounds.top) << 4) + 1;
@@ -1058,8 +1064,10 @@ void platform_update() BANKED {
                 }
                 tile_start++;
             }
-            PLAYER.pos.y = new_y;
         }
+
+        endYCollision:
+        PLAYER.pos.y = new_y;
     }
 
     //FUNCTION ACTOR CHECK
@@ -1349,13 +1357,10 @@ void platform_update() BANKED {
             //JUMP -> LADDER check
             ladder_check();
 
-
             //Check for final frame
             if (que_state != JUMP_STATE){
                 plat_state = JUMP_END;
             }
-
-
 
             // Counting down No Control frames
             // Set in Wall and Fall states, checked in Fall and Jump states

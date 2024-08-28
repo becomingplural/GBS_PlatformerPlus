@@ -358,6 +358,16 @@
       "defaultValue": 4,
       "min": 0,
       "max": 32
+    },
+    {
+      "key": "plat_jump_through_snap_threshold",
+      "label": "Jump Through Platforms Snap Threshold (pixels)",
+      "group": "Platformer Plus",
+      "type": "slider",
+      "cType": "UBYTE",
+      "defaultValue": 2,
+      "min": 0,
+      "max": 8
     }
   ]
 }
