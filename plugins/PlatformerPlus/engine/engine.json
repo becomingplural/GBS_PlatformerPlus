@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0-e4",
+  "version": "4.2.0-e1",
 
   "fields": [    
     {
@@ -237,9 +237,7 @@
         [0, "No Running"],
         [1, "GBS Default (Smooth Acceleration)"],
         [2, "Enhanced Smooth Acceleration"],
-        [3, "Immediate Run Speed"],
-        [4, "Two Run Speed Levels"],
-        [5, "Three Run Speed Levels"]
+        [3, "Immediate Run Speed"]
       ],
       "cType": "UBYTE",
       "defaultValue": 1

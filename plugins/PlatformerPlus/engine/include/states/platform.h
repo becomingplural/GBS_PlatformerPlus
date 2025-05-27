@@ -3,14 +3,14 @@
 
 #include <gb/gb.h>
 
-void platform_init();
-void platform_update();
-void basic_anim() BANKED;
-void wall_check() BANKED;
-void ladder_check() BANKED;
-void ladder_switch() BANKED;
-void dash_init_switch() BANKED;
-UBYTE drop_press() BANKED;
+void platform_init(void) BANKED;
+void platform_update(void) BANKED;
+void basic_anim(void) BANKED;
+void wall_check(void) BANKED;
+void ladder_check(void) BANKED;
+void ladder_switch(void) BANKED;
+void dash_init_switch(void) BANKED;
+UBYTE drop_press(void) BANKED;
 
 typedef struct script_state_t {
     UBYTE script_bank;

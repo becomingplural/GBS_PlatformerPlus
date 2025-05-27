@@ -17,7 +17,8 @@ const fields = [
       ["wj_val", "Number of wall jumps left"],
       ["wc_val", "Test if you're colliding with a wall (0 is false)"],
       ["dash_interrupt", "Checks if Dashing is Frozen (true false)"],
-      ["que_state", "The player's upcoming state. "]
+      ["que_state", "The player's upcoming state. "],
+      ["dash_ready_val", "Time until dash is ready"]
     ],
   },
   {
@@ -39,7 +40,8 @@ const compile = (input, helpers) => {
     dj_val: "UINT8",
     wj_val: "UINT8",
     wc_val: "UINT8",
-    que_state: "UINT8"
+    que_state: "UINT8",
+    dash_ready_val: "UINT8"
   };
 
   const fieldName = `_${input.field}`;
